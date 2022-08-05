@@ -1,14 +1,20 @@
 package com.example.lntapplication;
 
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -24,7 +30,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.rscja.deviceapi.RFIDWithUHFBLE;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,20 +37,23 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    RFIDWithUHFBLE uhfble = RFIDWithUHFBLE.getInstance();
+
     ConstraintLayout mappingForm, Searchform, IdentifyForm;
     ReportDb reportDb;
     List<ReportDatabase> listDB;
     Button SyncBtn;
-boolean StatusTable=false;
+    boolean StatusTable = false;
+    ProgressDialog dialog;
     NetworkInfo wifiCheck;
+    ImageView StatusBTImg;
+    TextView StatusBTtxt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,9 +62,18 @@ boolean StatusTable=false;
         IdentifyForm = findViewById(R.id.Identifyform);
         Searchform = findViewById(R.id.SearchForml);
         reportDb = new ReportDb(this);
+        StatusBTImg = findViewById(R.id.BTStatusImage);
+        StatusBTtxt = findViewById(R.id.BtStatusTextView);
         listDB = new ArrayList<>();
         SyncBtn = findViewById(R.id.buttonSync);
+dialog=new ProgressDialog(this);
 
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        this.registerReceiver(broadcastReceiver, filter);
 
 
 
@@ -64,30 +81,38 @@ boolean StatusTable=false;
         wifiCheck = connectionManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 
-
         SyncBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
                     StatusTable = reportDb.GetDataInfo();
-                    System.out.print("System "+StatusTable);
-                    if (wifiCheck.isConnected()) {
-                        // Do whatever here
-                        if (StatusTable) {
+                    System.out.print("System " + StatusTable);
 
+                    // Do whatever here
+                    if (StatusTable) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                            LocalDateTime now = LocalDateTime.now();
+                            dialog.setCancelable(false);
+                            dialog.setMessage("Uploading Data...");
+                            dialog.show();
+//                                String DateNow=now.toString();
                             listDB = reportDb.getAllContacts();
-                            submit_Report();
-                            Toast.makeText(MainActivity.this, "Start Updating....", Toast.LENGTH_SHORT).show();
-                        } else {
-                            FetchData();
-                            Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
-
+                            submit_Report(now);
                         }
+//                            listDB = reportDb.getAllContacts();
+//                            submit_Report(DateNow);
+//                        Toast.makeText(MainActivity.this, "Start Updating....", Toast.LENGTH_SHORT).show();
                     } else {
+                        FetchData();
+                        dialog.setCancelable(false);
+                        dialog.setMessage("Fetching Latest Data...");
+                        dialog.show();
 
-                        Toast.makeText(MainActivity.this, "WiFi is not Connected....", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
 
                     }
+
 
 //                    FetchData();
                 } catch (JSONException e) {
@@ -147,12 +172,17 @@ boolean StatusTable=false;
             @Override
             public void onResponse(String response) {
                 try {
+                    dialog.dismiss();
+
                     JSONArray array = new JSONArray(response);
                     if (array.length() == 0) {
 //                        dialog.dismiss();
-                        Toast.makeText(MainActivity.this, "No Data Available of this tag...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "No Data Available ", Toast.LENGTH_SHORT).show();
                     } else {
 
+                        Toast.makeText(MainActivity.this, "Updating New Data...", Toast.LENGTH_SHORT).show();
+                     if (StatusTable){
+                        reportDb.deleteAll();}
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject object = array.getJSONObject(i);
                             String productId = object.optString("productId");
@@ -178,7 +208,7 @@ boolean StatusTable=false;
                 }
             }
         }, error -> {
-//            dialog.dismiss();
+            dialog.dismiss();
             Toast.makeText(MainActivity.this, "" + error.getMessage(), Toast.LENGTH_SHORT).show();
         });
 
@@ -188,19 +218,15 @@ boolean StatusTable=false;
     }
 
 
-    private void submit_Report() throws JSONException {
+    private void submit_Report(LocalDateTime dateNow) throws JSONException {
 
         JSONObject object = new JSONObject();
 
         JSONArray array = new JSONArray();
-//        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-//        Date date = format.parse(dtStart);
-
-
 
         for (int i = 0; i < listDB.size(); i++) {
             JSONObject jsonObject = new JSONObject();
-            if (listDB.get(i).getStatus().matches("True")) {
+
 
                 jsonObject.put("productId", Integer.parseInt(listDB.get(i).getProductId()));
                 jsonObject.put("serialNo", listDB.get(i).getSerialNo());
@@ -215,25 +241,45 @@ boolean StatusTable=false;
 //            jsonObject.put("createdAt",listDB.get(i).getCreatedAt());
                 jsonObject.put("updatedAt", listDB.get(i).getUpdatedAt());
 
-            }
+
             array.put(jsonObject);
         }
 
 
-        object.put("ListData", array);
-        if (array.length()>0){
+//        object.put("Product", array);
+        if (array.length() > 0) {
             RequestQueue queue = Volley.newRequestQueue(this);
             System.out.println("JSON DATA " + object);
 
-            final String requestBody = object.toString();
+            final String requestBody = array.toString();
 
             StringRequest stringRequest = new StringRequest(Request.Method.POST, ApiUrl.GetUpdateData, response -> {
-                Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
+                try {
+                    JSONObject object1  = new JSONObject(response);
+dialog.dismiss();
+                    String status = object1.getString("status");
+                    String message = object1.getString("message");
+                    if (status.matches("true"))
+                    {
+
+                        FetchData();
+                        dialog.setCancelable(false);
+                        dialog.setMessage("Getting Latest Data...");
+                        dialog.show();
+                    }else {
+                        Toast.makeText(MainActivity.this, ""+message, Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
 
                 Log.i("VOLLEY Submit", response);
 //            dialog.dismiss();
             }, error -> {
                 try {
+                    dialog.dismiss();
 
                     Log.e("VOLLEY Negative", String.valueOf(error.networkResponse.statusCode));
                     Log.e("VOLLEY Negative", String.valueOf(error.getMessage()));
@@ -278,13 +324,32 @@ boolean StatusTable=false;
             queue.add(stringRequest.setRetryPolicy(new DefaultRetryPolicy(500000,
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)));
-        }else {
+        } else {
             Toast.makeText(MainActivity.this, "Not Data To Update....", Toast.LENGTH_SHORT).show();
         }
 //        String url = "http://164.52.223.163:4510/api/WriteRfidTagDetails";
 
     }
 
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        BluetoothDevice device;
 
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                StatusBTtxt.setText("Connected");
+                StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_connected_24);
+                Toast.makeText(getApplicationContext(), "Device is now Connected", Toast.LENGTH_SHORT).show();
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+
+                Toast.makeText(getApplicationContext(), "Device is disconnected", Toast.LENGTH_SHORT).show();
+                StatusBTtxt.setText("Disconnected");
+                StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_searching_24);
+            }
+
+        }
+    };
 
 }

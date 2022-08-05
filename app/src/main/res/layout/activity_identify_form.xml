@@ -126,7 +126,7 @@
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
                         android:paddingLeft="20dp"
-                        android:text="Tap to Scan Asset"
+                        android:text="Tap to Scan Tag"
                         android:textColor="#6c7075"
 
                         android:textSize="20dp"
@@ -633,6 +633,7 @@
                         android:layout_marginEnd="8dp"
                         android:text="--"
                         android:textColor="@color/Text_color"
+                        android:drawableRight="@drawable/ic_baseline_edit_24"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@+id/textView29"
                         app:layout_constraintTop_toBottomOf="@+id/Subject_t" />

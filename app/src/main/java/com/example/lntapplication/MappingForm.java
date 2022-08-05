@@ -1,6 +1,12 @@
 package com.example.lntapplication;
 
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +17,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -22,6 +29,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.rscja.deviceapi.RFIDWithUHFBLE;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
+import com.rscja.deviceapi.interfaces.KeyEventCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +46,7 @@ import java.util.List;
 public class MappingForm extends AppCompatActivity {
     String epc, result;
     CardView ReadingCard;
+    boolean bleStatus;
     Spinner assetId;
     Button Search, ViewDetals, Mapped;
     String AssetKey, location, serialNo, pO_DATE1;
@@ -45,12 +56,14 @@ public class MappingForm extends AppCompatActivity {
     ReportDb reportDb;
     List<ReportDatabase> listDB,listdball;
     String ProductId,SerialNo,DrawingNo,SapNo,SpoolNo,Weight,Contractor,Location,RfidNo,Remarks,CreatedAt,UpdatedAt,Status;
-
+    public RFIDWithUHFBLE uhf = RFIDWithUHFBLE.getInstance();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mapping_form);
 
+        dialog=new ProgressDialog(this);
+        uhf.init(this);
         ReadingCard = findViewById(R.id.button_Scan);
         assetId = findViewById(R.id.spinner2value);
         Search = findViewById(R.id.Stop_Search);
@@ -70,6 +83,29 @@ public class MappingForm extends AppCompatActivity {
         listdball=new ArrayList<>();
         listDB = reportDb.getAllContacts();
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        this.registerReceiver(broadcastReceiver, filter);
+
+        ReadingCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                result = uhf.readData("00000000", 1, 2, 6);
+//                UHFTAGInfo info = uhf.readTagFromBuffer();
+//                result= info.getEPC();
+                if (!(result ==null))
+                {
+                    Toast.makeText(MappingForm.this, ""+result, Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(MappingForm.this, "Scan Again...", Toast.LENGTH_SHORT).show();
+
+                }
+            }
+        });
+
         SetupID(listDB);
 
 
@@ -79,14 +115,57 @@ public class MappingForm extends AppCompatActivity {
 //        dialog.show();
 //        FetchAssetId();
 
+        uhf.setKeyEventCallback(new KeyEventCallback() {
+            @Override
+            public void onKeyDown(int i) {
+                if (i==1)
+                {
+                    result = uhf.readData("00000000", 1, 2, 6);
+                    if (!(result ==null))
+                    {
+                        Toast.makeText(MappingForm.this, ""+result, Toast.LENGTH_SHORT).show();
+                    }else {
+                        Toast.makeText(MappingForm.this, "Scan Again...", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                     }
+            }
+
+            @Override
+            public void onKeyUp(int i) {
+
+            }
+        });
+
+
+
         Mapped.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
                     LocalDateTime now = LocalDateTime.now();
-                    reportDb.updateContact(new ReportDatabase( ProductId,SerialNo,DrawingNo,SapNo,SpoolNo,Weight,Contractor,Location,"E200001733010",Remarks,CreatedAt,now.toString(),"True"),AssetKey);
+                    if (result.length()>0) {
+                        dialog.setMessage("Mapping Data...");
+                        dialog.setCancelable(false);
+                        dialog.show();
+                    int a =    reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+//                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
+                        if (a==1)
+                        {    dialog.dismiss();
+                            Clear();
+                            Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
+                        }else {
+                            dialog.dismiss();
+                            Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
+
+                        }
+
+                    }else{
+                        Toast.makeText(MappingForm.this, "Please Scan Tag...", Toast.LENGTH_SHORT).show();
+                    }
                 }
 
 
@@ -113,6 +192,9 @@ public class MappingForm extends AppCompatActivity {
 //                    dialog.setMessage("Fetch data....");
 //                    dialog.setCancelable(false);
 //                    dialog.show();
+                    dialog.setMessage("Fetching Data...");
+                    dialog.setCancelable(false);
+                    dialog.show();
                     listdball= reportDb.getAllDetailsSearch(AssetKey.trim());
                     SetDAta(listdball);
 
@@ -217,132 +299,7 @@ public class MappingForm extends AppCompatActivity {
 
     }
 
-    private void MappingTags() throws JSONException {
-//        String url = "http://164.52.223.163:4510/api/MapRfidTag";
-        JSONObject obj = new JSONObject();
-//        obj.put("id", "0");
-        obj.put("serialNo", serialNo);
-        obj.put("location", location);
-        obj.put("rfidNo", "E200001D770302491340DE48");
-//        obj.put("updatetime", "2022-06-13T06:45:17.169");
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-
-        final String requestBody = obj.toString();
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, ApiUrl.MapRfidID, response -> {
-
-            try {
-                JSONObject object = new JSONObject(response);
-                String message = object.optString("message");
-                String result = object.optString("status");
-                if (!result.matches("false")) {
-                    listId.clear();
-                    FetchAssetId();
-                    asseT_ID.setText("");
-                    seriaL_NO.setText("");
-                    planT_CODE.setText("");
-                    pO_NUMBER.setText("");
-                    pO_DATE.setText("");
-                    department.setText("");
-                    ASSET_CODE.setText("");
-                    alloteD_TO_PLANT.setText("");
-                    Toast.makeText(this, "" + message, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "" + message, Toast.LENGTH_SHORT).show();
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-//            Toast.makeText(Mapping.this, "" + response, Toast.LENGTH_SHORT).show();
-            Log.i("VOLLEY", response);
-            dialog.dismiss();
-//            listId.clear();
-//            FetchAssetId();
-        }, error -> {
-            Log.e("VOLLEY Negative", error.toString());
-            dialog.dismiss();
-        }) {
-            @Override
-            public String getBodyContentType() {
-                return "application/json; charset=utf-8";
-            }
-
-            @Override
-            public byte[] getBody() throws AuthFailureError {
-                try {
-                    return requestBody == null ? null : requestBody.getBytes("utf-8");
-                } catch (UnsupportedEncodingException uee) {
-                    VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
-                    return null;
-                }
-            }
-        };
-
-        queue.add(stringRequest);
-    }
-
-    private void FetchData(String epcvalue) throws JSONException {
-        RequestQueue queue = Volley.newRequestQueue(this);
-//        String url = "http://164.52.223.163:4510/api/GetAssetInfo?Assetid=" + epcvalue;
-//        String url = "http://mudvprfidiis:82/api/GetAssetInfo?Assetid=" + epcvalue;
-        StringRequest sr = new StringRequest(Request.Method.GET, ApiUrl.AssetIDDAta + epcvalue, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-
-                    JSONObject object = new JSONObject(response);
-                    String productId = object.optString("productId");
-                    serialNo = object.optString("serialNo");
-                    String drawingNo = object.optString("drawingNo");
-                    String sapNo = object.optString("sapNo");
-                    String spoolNo = object.optString("spoolNo");
-                    String weight = object.optString("weight");
-                    String contractor = object.optString("contractor");
-                    location = object.optString("location");
-                    String rfidNo = object.optString("rfidNo");
-                    String remarks = object.optString("remarks");
-                    String createdAt = object.optString("createdAt");
-                    String updatedAt = object.optString("updatedAt");
-
-//
-                    asseT_ID.setText(productId);
-                    seriaL_NO.setText(serialNo);
-                    planT_CODE.setText(drawingNo);
-                    pO_NUMBER.setText(sapNo);
-                    pO_DATE.setText(spoolNo);
-                    department.setText(weight);
-                    ASSET_CODE.setText(contractor);
-                    alloteD_TO_PLANT.setText(location);
-////                    Publisher.setText(LibraryItemType1);
-//                    RFIDNo.setText(RFIDNo1);
-//                    AccessNo.setText(Publisher1);
-//                    Author.setText(ItemStatus1);
-//                    Title.setText(Author1);
-//                    YearOfPublication.setText(YearOfPublication1);
-//                    EntryDate.setText(EntryDate1);
-                    dialog.dismiss();
-
-
-                    Log.e("response", response.toString());
-                } catch (Exception e) {
-                    Toast.makeText(MappingForm.this, "No Data Found...", Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
-                    dialog.dismiss();
-                }
-
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MappingForm.this, "No Data Found...", Toast.LENGTH_SHORT).show();
-            }
-        });
-        queue.add(sr);
-    }
 
 
     private void SetDAta(List<ReportDatabase> listDetails) {
@@ -373,13 +330,59 @@ public class MappingForm extends AppCompatActivity {
         UpdatedAt=listDetails.get(0).getUpdatedAt();
         CreatedAt=listDetails.get(0).getCreatedAt();
 
-//        asseT_ID.setText(productId);
-//        seriaL_NO.setText(serialNo);
-//        planT_CODE.setText(drawingNo);
-//        pO_NUMBER.setText(sapNo);
-//        pO_DATE.setText(spoolNo);
-//        department.setText(weight);
-//        ASSET_CODE.setText(contractor);
-//        alloteD_TO_PLANT.setText(location);
+dialog.dismiss();
     }
+
+    public  void Clear()
+    {
+
+        department.setText("");
+//                        BookAddedIn.setText();
+//                        BookCategory.setText();
+        ASSET_CODE.setText("");
+//                        SubjectTitle.setText();
+        planT_CODE.setText("");
+//                        Edition.setText();
+        pO_NUMBER.setText("");
+//                        RFIDNo.setText(RFIDNo1);
+        pO_DATE.setText("");
+        seriaL_NO.setText("");
+        asseT_ID.setText("");
+        alloteD_TO_PLANT.setText("");
+    }
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        BluetoothDevice device;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                bleStatus = true;
+                Toast.makeText(getApplicationContext(), "Device is now Connected", Toast.LENGTH_SHORT).show();
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                Toast.makeText(getApplicationContext(), "Device is disconnected", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+    public void ShowDailog() {
+        new AlertDialog.Builder(this)
+                .setIcon(R.drawable.exitapp)
+                .setTitle("Connect Bluetooth")
+                .setMessage("Do You want to Connect device with bluetooth ?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        uhf.free();
+                        startActivity(new Intent(MappingForm.this, BleSetUPForm.class));
+                        finish();
+                    }
+
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+
 }

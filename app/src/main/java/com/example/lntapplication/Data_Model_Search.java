@@ -1,7 +1,6 @@
 package com.example.lntapplication;
 
 public class Data_Model_Search {
-
     public String productId;
     public String serialNo;
     public String drawingNo;

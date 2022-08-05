@@ -1,14 +1,22 @@
 package com.example.lntapplication;
 
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -18,6 +26,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
+import com.rscja.deviceapi.interfaces.KeyEventCallback;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,9 +44,9 @@ public class IdentifyForm extends AppCompatActivity {
     CardView scan_button;
     public List<String> tempList;
     String epc;
-    String result;
+    boolean bleStatus;
+    String spoolID;
     private List<ReportDatabase> listDetails;
-//   private RFIDWithUHFBLE rfidWithUHFBLE = new RFIDWithUHFBLE();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,18 +76,119 @@ public class IdentifyForm extends AppCompatActivity {
         tempList = new ArrayList<>();
         dialog = new ProgressDialog(this);
         listDetails = new ArrayList<>();
+
+        YearOfPublication.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LayoutInflater layoutInflaterAndroid = LayoutInflater.from(IdentifyForm.this);
+                View mView = layoutInflaterAndroid.inflate(R.layout.dailoglocationupdate, null);
+                android.app.AlertDialog.Builder alertDialogBuilderUserInput = new android.app.AlertDialog.Builder(IdentifyForm.this);
+                alertDialogBuilderUserInput.setView(mView);
+                EditText editText = mView.findViewById(R.id.editTextTextPersonName);
+                Button updatebtn, cancelbtn;
+                updatebtn = mView.findViewById(R.id.button_update);
+                cancelbtn = mView.findViewById(R.id.button_cancel);
+                android.app.AlertDialog alertDialogAndroid = alertDialogBuilderUserInput.create();
+
+                updatebtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (editText.length() > 0) {
+                            if (spoolID != null) {
+                                int a = reportDb.UpdateLocation(editText.getText().toString().trim(), spoolID);
+                                if (a == 1) {
+                                    editText.setText("");
+                                    YearOfPublication.setText(editText.getText().toString().trim());
+                                    Toast.makeText(IdentifyForm.this, "Location Update  Successfully...", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    dialog.dismiss();
+                                    Toast.makeText(IdentifyForm.this, "Location not updated...  ", Toast.LENGTH_SHORT).show();
+
+                                }
+                            } else {
+                                Toast.makeText(IdentifyForm.this, "Scan Tag first for update Location", Toast.LENGTH_SHORT).show();
+                            }
+
+                        } else {
+                            editText.setError("Enter value...");
+                        }
+                    }
+                });
+
+                cancelbtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        alertDialogAndroid.dismiss();
+                    }
+                });
+
+
+                alertDialogAndroid.show();
+            }
+
+
+        });
+        uhf.init(this);
         //Listeners
+
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        this.registerReceiver(broadcastReceiver, filter);
+
+
+        uhf.setKeyEventCallback(new KeyEventCallback() {
+            @Override
+            public void onKeyDown(int i) {
+                if (i == 1) {
+//                    if (bleStatus) {
+                    String data = "";
+                    data = uhf.readData("00000000", 1, 2, 6);
+                    listDetails = reportDb.getAllDetails(data);
+                    if (listDetails.size() > 0) {
+                        dialog.setMessage("Fetching Data...");
+                        dialog.setCancelable(false);
+                        dialog.show();
+                        SetDAta(listDetails);
+                    } else {
+                        Toast.makeText(IdentifyForm.this, data + " no Data for this Tag...", Toast.LENGTH_SHORT).show();
+                    }
+//                    }else {
+//                        ShowDailog();
+//                    }
+                }
+            }
+
+            @Override
+            public void onKeyUp(int i) {
+
+            }
+        });
 
 
         scan_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listDetails = reportDb.getAllDetails("E200001D770302491340DE48");
+//                if (bleStatus) {
+                String data = "";
+                data = uhf.readData("00000000", 1, 2, 6);
+                listDetails = reportDb.getAllDetails(data);
                 if (listDetails.size() > 0) {
                     SetDAta(listDetails);
+//                        dialog.setMessage("Fetching Data...");
+//                        dialog.setCancelable(false);
+//                        dialog.show();
                 } else {
-                    Toast.makeText(IdentifyForm.this, "E200001D770302491340DE48 no Data for this Tag...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(IdentifyForm.this, data + " no Data for this Tag...", Toast.LENGTH_SHORT).show();
                 }
+
+//                }
+//                else {
+//                    ShowDailog();
+//
+//                }
             }
         });
 
@@ -99,13 +209,7 @@ public class IdentifyForm extends AppCompatActivity {
 //                        })
 //                        .setNegativeButton("No", null)
 //                        .show();
-
-                                            try {
-                                                FetchData("E200001D770302491340DE48");
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-
+                                            ClearData();
                                         }
                                     }
 
@@ -127,6 +231,8 @@ public class IdentifyForm extends AppCompatActivity {
         Author.setText(listDetails.get(0).getSerialNo());
         Title.setText(listDetails.get(0).getProductId());
         YearOfPublication.setText(listDetails.get(0).getLocation());
+        spoolID = listDetails.get(0).getSpoolNo();
+        dialog.dismiss();
     }
 
 
@@ -212,16 +318,40 @@ public class IdentifyForm extends AppCompatActivity {
 
     }
 
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_F1:
-//                Scan();
-                Toast.makeText(IdentifyForm.this, "Clicked...", Toast.LENGTH_SHORT).show();
-                return true;
-            default:
-                return super.onKeyUp(keyCode, event);
+
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        BluetoothDevice device;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                bleStatus = true;
+                Toast.makeText(getApplicationContext(), "Device is now Connected", Toast.LENGTH_SHORT).show();
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                Toast.makeText(getApplicationContext(), "Device is disconnected", Toast.LENGTH_SHORT).show();
+            }
         }
+    };
+
+    public void ShowDailog() {
+        new AlertDialog.Builder(this)
+                .setIcon(R.drawable.exitapp)
+                .setTitle("Connect Bluetooth")
+                .setMessage("Do You want to Connect device with bluetooth ?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        uhf.free();
+                        startActivity(new Intent(IdentifyForm.this, BleSetUPForm.class));
+                        finish();
+                    }
+
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
+
 
 }

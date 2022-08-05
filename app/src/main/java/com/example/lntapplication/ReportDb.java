@@ -272,5 +272,35 @@ public class ReportDb extends SQLiteOpenHelper {
 ////            return true;
 //    }
 
+//    public void deleteAll()
+//    {
+//        String query="TRUNCATE TABLE"+ TABLE_Report;
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        // db.delete(TABLE_NAME,null,null);
+//        //db.execSQL("delete * from"+ TABLE_NAME);
+//        db.execSQL(query);
+//        db.close();
+//    }
+    public void deleteAll()
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("delete from "+ TABLE_Report);
+        db.close();
+    }
+
+
+    public int UpdateLocation(String Location1, String valueID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+
+        values.put(Location, Location1);
+
+
+
+        // updating row
+        return db.update(TABLE_Report, values, SpoolNo + " = ?",
+                new String[]{String.valueOf(valueID)});
+    }
 
 }

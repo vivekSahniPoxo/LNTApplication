@@ -46,7 +46,7 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
         holder.h1.setText("Contractor Name :");
         holder.h2.setText("Drawing ID :");
         holder.h3.setText("Sap NO :");
-        holder.h4.setText("Serial Number :");
+        holder.h4.setText("Spool Number :");
 
 //Change color if data found
         String Colorname =model.getColor();
@@ -192,10 +192,11 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
 //    }
 
     //Method for Search
-    public void getFilter(@NonNull Object search_value) {
+    public void getFilter(@NonNull List search_value) {
         for (Data_Model_Search row : list) {
             if (row.getRfidNo() != null) {
-                if (row.getRfidNo().equals(search_value)) {
+                for (int i=0;i<search_value.size();i++){
+                if (row.getRfidNo().equals(search_value.get(i))) {
                     row.setColor("Green");
                     notifyDataSetChanged();
                     break;
@@ -212,7 +213,7 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
 //                        notifyDataSetChanged();
 //                        break;
 //                    }
-                }
+                }}
 //                else {
 //                    Toast.makeText(context.getApplicationContext(), "Data Not Found", Toast.LENGTH_SHORT).show();
 //                    break;

@@ -79,25 +79,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
-                    <!--                    <EditText-->
-                    <!--                        android:id="@+id/Search_Data"-->
-                    <!--                        android:layout_width="0dp"-->
-                    <!--                        android:layout_height="40dp"-->
-                    <!--                        android:layout_marginStart="16dp"-->
-                    <!--                        android:layout_marginTop="16dp"-->
-
-                    <!--                        android:layout_marginEnd="8dp"-->
-                    <!--                        android:layout_marginBottom="8dp"-->
-                    <!--                        android:background="@drawable/custom_edittext"-->
-                    <!--                        android:hint="Search"-->
-
-                    <!--                        android:inputType="text"-->
-                    <!--                        android:paddingLeft="10dp"-->
-                    <!--                        android:textColor="@color/black"-->
-                    <!--                        app:layout_constraintBottom_toTopOf="@+id/Accession_no"-->
-                    <!--                        app:layout_constraintEnd_toStartOf="@+id/Search_b"-->
-                    <!--                        app:layout_constraintStart_toStartOf="parent"-->
-                    <!--                        app:layout_constraintTop_toTopOf="parent" />-->
 
 
                     <EditText
@@ -111,7 +92,7 @@
                         android:background="@drawable/custom_edittext"
                         android:ems="10"
 
-                        android:hint="Enter Asset Id"
+                        android:hint="Enter Spool Number"
                         android:inputType="textPersonName"
                         android:paddingLeft="10dp"
                         android:textColor="@color/black"
