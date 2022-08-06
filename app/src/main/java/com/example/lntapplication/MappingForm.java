@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -45,6 +46,7 @@ import java.util.List;
 
 public class MappingForm extends AppCompatActivity {
     String epc, result;
+    Context context = this;
     CardView ReadingCard;
     boolean bleStatus;
     Spinner assetId;
@@ -96,8 +98,10 @@ public class MappingForm extends AppCompatActivity {
                 result = uhf.readData("00000000", 1, 2, 6);
 //                UHFTAGInfo info = uhf.readTagFromBuffer();
 //                result= info.getEPC();
+
                 if (!(result ==null))
                 {
+
                     Toast.makeText(MappingForm.this, ""+result, Toast.LENGTH_SHORT).show();
                 }else {
                     Toast.makeText(MappingForm.this, "Scan Again...", Toast.LENGTH_SHORT).show();
@@ -146,40 +150,60 @@ public class MappingForm extends AppCompatActivity {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
                     LocalDateTime now = LocalDateTime.now();
+
+
+
                     if (result.length()>0) {
-                        dialog.setMessage("Mapping Data...");
-                        dialog.setCancelable(false);
-                        dialog.show();
-                    int a =    reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+                        if (RfidNo==null) {
+                            dialog.setMessage("Mapping Data...");
+                            dialog.setCancelable(false);
+                            dialog.show();
+                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
 //                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
-                        if (a==1)
-                        {    dialog.dismiss();
-                            Clear();
-                            Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
+                            if (a == 1) {
+                                dialog.dismiss();
+                                Clear();
+                                Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
+                            } else {
+                                dialog.dismiss();
+                                Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
+
+                            }
                         }else {
-                            dialog.dismiss();
-                            Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
+                            new AlertDialog.Builder(context)
+                                    .setIcon(R.drawable.ic_baseline_update_24)
+                                    .setTitle("Update Rfid Number")
+                                    .setMessage("This Rfid already Mapped.Do you want to Update ?")
+                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
 
+                                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+//                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
+
+                                            if (a == 1) {
+                                                dialog.dismiss();
+                                                Clear();
+                                                Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                dialog.dismiss();
+                                                Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
+
+                                            }
+
+                                        }
+
+                                    })
+                                    .setNegativeButton("No", null)
+                                    .show();
+                            Toast.makeText(MappingForm.this, "This "+SpoolNo+" Already Mapped...", Toast.LENGTH_SHORT).show();
                         }
-
                     }else{
                         Toast.makeText(MappingForm.this, "Please Scan Tag...", Toast.LENGTH_SHORT).show();
                     }
                 }
 
-
-                //                if (result == null) {
-//                    Toast.makeText(Mapping.this, "Please Read RFID tag...", Toast.LENGTH_SHORT).show();
-//                } else {
-//                try {
-////                        dialog.setMessage("Mapping Tag....");
-////                        dialog.setCancelable(false);
-////                        dialog.show();
-//                    MappingTags();
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
             }
 //            }
         });
@@ -202,25 +226,13 @@ public class MappingForm extends AppCompatActivity {
                     Toast.makeText(MappingForm.this, "Please Select Asset ID", Toast.LENGTH_SHORT).show();
                 }
 
-//                try {
-//                    if (AssetKey.length() > 0) {
-//                        FetchData(AssetKey);
-//                        dialog.setMessage("Fetch data....");
-//                        dialog.setCancelable(false);
-//                        dialog.show();
-//                    } else {
-//                        Toast.makeText(MappingForm.this, "Please Select Asset ID", Toast.LENGTH_SHORT).show();
-//                    }
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
             }
         });
     }
 
     private void SetupID(List<ReportDatabase> listDB) {
         for (int i = 0; i < listDB.size(); i++) {
-            listId.add(listDB.get(i).getSerialNo());
+            listId.add(listDB.get(i).getSpoolNo());
 
         }
         final ArrayAdapter<String> SpinnerCountrty = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listId);
@@ -239,45 +251,6 @@ public class MappingForm extends AppCompatActivity {
         });
     }
 
-    private void FetchAssetId() {
-//        String url = "http://164.52.223.163:4510/api/GetAssetId";
-        RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest request = new StringRequest(Request.Method.GET, ApiUrl.GetAssetID, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-
-                try {
-                    JSONArray array = new JSONArray(response);
-                    listId.add("Select ID");
-                    for (int i = 0; i < array.length(); i++) {
-                        JSONObject object = array.getJSONObject(i);
-                        String id = object.getString("serialNo");
-
-                        listId.add(id);
-                    }
-
-                    SetupIDSpinner(listId);
-                    dialog.dismiss();
-                } catch (JSONException jsonException) {
-                    jsonException.printStackTrace();
-                    dialog.dismiss();
-                }
-//                    final List<String> List = new ArrayList<>(Arrays.asList(value));
-
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MappingForm.this, error.getMessage(), Toast.LENGTH_LONG).show();
-                dialog.dismiss();
-
-            }
-        });
-
-        queue.add(request);
-
-    }
 
     private void SetupIDSpinner(List<String> listId) {
         //Country name Spinner
@@ -329,7 +302,7 @@ public class MappingForm extends AppCompatActivity {
         Remarks=listDetails.get(0).getRemarks();
         UpdatedAt=listDetails.get(0).getUpdatedAt();
         CreatedAt=listDetails.get(0).getCreatedAt();
-
+         RfidNo=listDetails.get(0).getRfidNo();
 dialog.dismiss();
     }
 

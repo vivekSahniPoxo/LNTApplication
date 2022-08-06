@@ -163,7 +163,7 @@ public class ReportDb extends SQLiteOpenHelper {
         List<ReportDatabase> contactList = new ArrayList<ReportDatabase>();
         // Select All Query
 //        String selectQuery = "SELECT  * FROM " + TABLE_Report + "WHERE" + PVmodleName + "=" + Modelname;
-        String selectQuery = "SELECT * FROM " + TABLE_Report + " WHERE " + SerialNo + " = '" + Modelname + "'";
+        String selectQuery = "SELECT * FROM " + TABLE_Report + " WHERE " + SpoolNo + " = '" + Modelname + "'";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -243,7 +243,7 @@ public class ReportDb extends SQLiteOpenHelper {
 
 
         // updating row
-        return db.update(TABLE_Report, values, SerialNo + " = ?",
+        return db.update(TABLE_Report, values, SpoolNo + " = ?",
                 new String[]{String.valueOf(valueID)});
     }
 

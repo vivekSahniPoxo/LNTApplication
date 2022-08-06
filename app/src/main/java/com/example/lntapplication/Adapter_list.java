@@ -39,7 +39,7 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
     public void onBindViewHolder(@NonNull myviewholder holder, int position) {
 //Initial Data model
         Data_Model_Search model = list.get(position);
-        holder.language.setText(model.getSerialNo());
+        holder.language.setText(model.getSpoolNo());
         holder.publisher.setText(model.getSapNo());
         holder.head_title.setText(model.getDrawingNo());
         holder.head_subject.setText(model.getContractor());

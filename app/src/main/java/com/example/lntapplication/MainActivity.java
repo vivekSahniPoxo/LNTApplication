@@ -205,6 +205,7 @@ dialog=new ProgressDialog(this);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    dialog.dismiss();
                 }
             }
         }, error -> {
@@ -260,6 +261,7 @@ dialog=new ProgressDialog(this);
 dialog.dismiss();
                     String status = object1.getString("status");
                     String message = object1.getString("message");
+                    Log.i("Update Data Message",message);
                     if (status.matches("true"))
                     {
 
@@ -272,6 +274,7 @@ dialog.dismiss();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    dialog.dismiss();
                 }
 
 
@@ -293,7 +296,7 @@ dialog.dismiss();
                     }
                 } catch (Exception e) {
                     Log.e("VOLLEY Negative", String.valueOf(error.getMessage()));
-
+                    dialog.dismiss();
 //                    Toast.makeText(this, "Update...", Toast.LENGTH_SHORT).show();
 
                 }
