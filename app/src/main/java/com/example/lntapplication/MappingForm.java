@@ -153,7 +153,7 @@ public class MappingForm extends AppCompatActivity {
 
 
 
-                    if (result.length()>0) {
+                    if (result!=null) {
                         if (RfidNo==null) {
                             dialog.setMessage("Mapping Data...");
                             dialog.setCancelable(false);

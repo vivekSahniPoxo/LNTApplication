@@ -34,7 +34,7 @@ import java.util.List;
 public class BleConnectFrom extends AppCompatActivity implements bleListener {
     TextView bleStatus;
     Button SearchScanButton;
-
+   public static  boolean BTStatus=false;
     RecyclerView recyclerView;
     RFIDWithUHFBLE uhf = RFIDWithUHFBLE.getInstance();
     BluetoothAdapter bluetoothAdapter;
@@ -42,12 +42,13 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
     List<BleDeviceDetails> list = new ArrayList<>();
     BTStatus btStatus = new BTStatus();
     AdapterRecyclerview adapter_list;
+    Button backbtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ble_connect_from);
-
+        backbtn = findViewById(R.id.buttonback);
         bleStatus = findViewById(R.id.statusTextView1);
         SearchScanButton = findViewById(R.id.button_Search1);
         recyclerView = findViewById(R.id.Recycclerview);
@@ -74,6 +75,14 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
             public void onClick(View view) {
                 searchFunction();
 
+            }
+        });
+
+        backbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(BleConnectFrom.this,MainActivity.class));
+                finish();
             }
         });
 
@@ -177,7 +186,7 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
     @Override
     public void onItemClick(int position) {
 
-        Toast.makeText(BleConnectFrom.this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
+//        Toast.makeText(BleConnectFrom.this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
         connect(list.get(position).getAddress());
         dialog.setCancelable(false);
         dialog.setMessage("Connecting Device...");
@@ -193,9 +202,11 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
                     if (connectionStatus == ConnectionStatus.CONNECTED) {
 //                        Toast.makeText(BleSetUPForm.this, "Connected Device ...", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(BleConnectFrom.this, MainActivity.class));
+                        BTStatus=true;
                         dialog.dismiss();
 
                     } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
+
                         Toast.makeText(BleConnectFrom.this, "Device Disconnect...", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     } else {
@@ -206,5 +217,10 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
                 }
             });
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(BleConnectFrom.this,MainActivity.class));
     }
 }

@@ -1,22 +1,34 @@
 package com.example.lntapplication;
 
+import static com.example.lntapplication.BleConnectFrom.BTStatus;
+
 import android.app.ProgressDialog;
+import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.Image;
 import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -37,6 +49,8 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -47,13 +61,17 @@ public class MainActivity extends AppCompatActivity {
     ConstraintLayout mappingForm, Searchform, IdentifyForm;
     ReportDb reportDb;
     List<ReportDatabase> listDB;
-    Button SyncBtn;
+    ImageButton SyncBtn;
     boolean StatusTable = false;
     ProgressDialog dialog;
     NetworkInfo wifiCheck;
     ImageView StatusBTImg;
     TextView StatusBTtxt;
+    BluetoothAdapter bluetoothAdapter;
+    ImageView setting;
+    String DNSAddress=null;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,7 +84,13 @@ public class MainActivity extends AppCompatActivity {
         StatusBTtxt = findViewById(R.id.BtStatusTextView);
         listDB = new ArrayList<>();
         SyncBtn = findViewById(R.id.buttonSync);
-dialog=new ProgressDialog(this);
+        dialog = new ProgressDialog(this);
+        setting = findViewById(R.id.imageView4);
+
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothState();
+
+
 
 
         IntentFilter filter = new IntentFilter();
@@ -74,7 +98,6 @@ dialog=new ProgressDialog(this);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         this.registerReceiver(broadcastReceiver, filter);
-
 
 
         ConnectivityManager connectionManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -85,9 +108,23 @@ dialog=new ProgressDialog(this);
             @Override
             public void onClick(View view) {
                 try {
+                    ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Service.CONNECTIVITY_SERVICE);
+
+                    /* you can print your active network via using below */
+                    Log.i("myNetworkType: ", connectivityManager.getActiveNetworkInfo().getTypeName());
+                    WifiManager wifiManager= (WifiManager) getApplicationContext().getSystemService(getApplicationContext().WIFI_SERVICE);
+
+
+
+
+                    Log.i("ip address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getLinkAddresses().toString());
+                    Log.i("dns address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString());
+                    DNSAddress=connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString();
+
+
                     StatusTable = reportDb.GetDataInfo();
                     System.out.print("System " + StatusTable);
-
+                    if (DNSAddress.equals("[/192.168.43.1]")){
                     // Do whatever here
                     if (StatusTable) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -111,6 +148,9 @@ dialog=new ProgressDialog(this);
 
 //                        Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
 
+                    }}else {
+//                        ShowDailogBox();
+                        Toast.makeText(MainActivity.this, "No is Secure network", Toast.LENGTH_SHORT).show();
                     }
 
 
@@ -125,24 +165,51 @@ dialog=new ProgressDialog(this);
         Searchform.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, SearchForm.class));
+                if (BTStatus){
+                startActivity(new Intent(MainActivity.this, SearchForm.class));}else {
+                    Toast.makeText(MainActivity.this, "Device is not Connected With RFid Reader...", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         IdentifyForm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, IdentifyForm.class));
-
+                if (BTStatus) {
+                    startActivity(new Intent(MainActivity.this, IdentifyForm.class));
+                }else {
+                    Toast.makeText(MainActivity.this, "Device is not Connected With RFid Reader...", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         mappingForm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, MappingForm.class));
+                if (BTStatus) {
+                    startActivity(new Intent(MainActivity.this, MappingForm.class));
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Device is not Connected With RFid Reader...", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
 
+    }
+
+    private void ShowDailogBox() {
+        new AlertDialog.Builder(getApplicationContext())
+                .setIcon(R.drawable.ic_baseline_network_check_24)
+                .setTitle("Quit")
+                .setMessage("Are you sure you want to Quit this App ?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
 
@@ -181,8 +248,9 @@ dialog=new ProgressDialog(this);
                     } else {
 
                         Toast.makeText(MainActivity.this, "Updating New Data...", Toast.LENGTH_SHORT).show();
-                     if (StatusTable){
-                        reportDb.deleteAll();}
+                        if (StatusTable) {
+                            reportDb.deleteAll();
+                        }
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject object = array.getJSONObject(i);
                             String productId = object.optString("productId");
@@ -229,18 +297,18 @@ dialog=new ProgressDialog(this);
             JSONObject jsonObject = new JSONObject();
 
 
-                jsonObject.put("productId", Integer.parseInt(listDB.get(i).getProductId()));
-                jsonObject.put("serialNo", listDB.get(i).getSerialNo());
-                jsonObject.put("drawingNo", listDB.get(i).getDrawingNo());
-                jsonObject.put("sapNo", listDB.get(i).getSapNo());
-                jsonObject.put("spoolNo", listDB.get(i).getSpoolNo());
-                jsonObject.put("weight", new BigDecimal(listDB.get(i).getWeight()));
-                jsonObject.put("contractor", listDB.get(i).getContractor());
-                jsonObject.put("location", listDB.get(i).getLocation());
-                jsonObject.put("rfidNo", listDB.get(i).getRfidNo());
-                jsonObject.put("remarks", listDB.get(i).getRemarks());
+            jsonObject.put("productId", Integer.parseInt(listDB.get(i).getProductId()));
+            jsonObject.put("serialNo", listDB.get(i).getSerialNo());
+            jsonObject.put("drawingNo", listDB.get(i).getDrawingNo());
+            jsonObject.put("sapNo", listDB.get(i).getSapNo());
+            jsonObject.put("spoolNo", listDB.get(i).getSpoolNo());
+            jsonObject.put("weight", new BigDecimal(listDB.get(i).getWeight()));
+            jsonObject.put("contractor", listDB.get(i).getContractor());
+            jsonObject.put("location", listDB.get(i).getLocation());
+            jsonObject.put("rfidNo", listDB.get(i).getRfidNo());
+            jsonObject.put("remarks", listDB.get(i).getRemarks());
 //            jsonObject.put("createdAt",listDB.get(i).getCreatedAt());
-                jsonObject.put("updatedAt", listDB.get(i).getUpdatedAt());
+            jsonObject.put("updatedAt", listDB.get(i).getUpdatedAt());
 
 
             array.put(jsonObject);
@@ -257,20 +325,19 @@ dialog=new ProgressDialog(this);
             StringRequest stringRequest = new StringRequest(Request.Method.POST, ApiUrl.GetUpdateData, response -> {
 //                Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
                 try {
-                    JSONObject object1  = new JSONObject(response);
-dialog.dismiss();
+                    JSONObject object1 = new JSONObject(response);
+                    dialog.dismiss();
                     String status = object1.getString("status");
                     String message = object1.getString("message");
-                    Log.i("Update Data Message",message);
-                    if (status.matches("true"))
-                    {
+                    Log.i("Update Data Message", message);
+                    if (status.matches("true")) {
 
                         FetchData();
                         dialog.setCancelable(false);
                         dialog.setMessage("Getting Latest Data...");
                         dialog.show();
-                    }else {
-                        Toast.makeText(MainActivity.this, ""+message, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "" + message, Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -355,4 +422,57 @@ dialog.dismiss();
         }
     };
 
+    public void BluetoothState()
+    {
+        if (!bluetoothAdapter.isEnabled()) {
+            StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_24);
+            StatusBTtxt.setText("Bluetooth OFF");
+
+            StatusBTImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(turnOn, 0);
+                }
+            });
+
+
+        }else { if (bluetoothAdapter.isEnabled())
+        {
+            if (BTStatus)
+            {
+                StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_connected_24);
+                StatusBTtxt.setText("Bluetooth Connected");
+            }else {
+                StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_24orange);
+                StatusBTtxt.setText("Bluetooth ON");
+            }
+            StatusBTImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(MainActivity.this,BleConnectFrom.class));
+                }
+            });
+
+
+        }
+
+        }
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        super.startActivityForResult(intent, requestCode);
+        if(requestCode==0){
+            StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_24orange);
+            StatusBTtxt.setText("Bluetooth ON");
+
+            StatusBTImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(MainActivity.this,BleConnectFrom.class));
+                }
+            });
+        }
+    }
 }

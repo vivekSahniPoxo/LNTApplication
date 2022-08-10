@@ -98,14 +98,16 @@ public class IdentifyForm extends AppCompatActivity {
                                 int a = reportDb.UpdateLocation(editText.getText().toString().trim(), spoolID);
                                 if (a == 1) {
                                     editText.setText("");
+                                    alertDialogAndroid.dismiss();
                                     YearOfPublication.setText(editText.getText().toString().trim());
                                     Toast.makeText(IdentifyForm.this, "Location Update  Successfully...", Toast.LENGTH_SHORT).show();
                                 } else {
-                                    dialog.dismiss();
+                                    alertDialogAndroid.dismiss();
                                     Toast.makeText(IdentifyForm.this, "Location not updated...  ", Toast.LENGTH_SHORT).show();
 
                                 }
                             } else {
+                                alertDialogAndroid.dismiss();
                                 Toast.makeText(IdentifyForm.this, "Scan Tag first for update Location", Toast.LENGTH_SHORT).show();
                             }
 

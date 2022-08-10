@@ -12,7 +12,11 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -41,7 +45,7 @@ import java.util.List;
 
 public class SearchForm extends AppCompatActivity {
     Button add_accession_btn, Search_btn, retry_btn, stop_btn, New_, SubmitDetails;
-    EditText accession_no;
+    AutoCompleteTextView accession_no;
     public RFIDWithUHFBLE uhf = RFIDWithUHFBLE.getInstance();
     Handler handler;
     boolean bleStatus = false;
@@ -53,9 +57,12 @@ public class SearchForm extends AppCompatActivity {
     private LooperDemo looperDemo;
     List<String> rfidlist = new ArrayList<>();
     ReportDb reportDb;
-    List<ReportDatabase> listDb;
-    String buttonText;
+    List<ReportDatabase> listDb,ListDbAll;
+    List<String> listDbSerial=new ArrayList<>();
 
+    int count=0;
+    String buttonText;
+       CheckBox SelectAll;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +76,8 @@ public class SearchForm extends AppCompatActivity {
         New_ = findViewById(R.id.New_accession);
         SubmitDetails = findViewById(R.id.buttonrfidDetails);
         reportDb = new ReportDb(this);
+        SelectAll=findViewById(R.id.checkBox_SelectAll);
+
         listDb = new ArrayList<>();
         uhf.init(this);
         looperDemo = new LooperDemo();
@@ -78,6 +87,30 @@ public class SearchForm extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         this.registerReceiver(broadcastReceiver, filter);
+        ListDbAll=reportDb.getAllContacts();
+
+
+       SelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+           @Override
+           public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+               if (SelectAll.isChecked())
+               {
+                   if (count==0){
+                       count=1;
+                   listDb=reportDb.getAllContacts();
+                   if (listDb.size() > 0) {
+                       dialog.setMessage("Fetching Data...");
+                       dialog.setCancelable(false);
+                       dialog.show();
+                       SetDataRecyclerview(listDb);
+                   } else {
+                       Toast.makeText(SearchForm.this, "No Data of this Spool number ", Toast.LENGTH_SHORT).show();
+                   }
+                   }
+               }
+
+           }
+       });
 
         handler = new Handler(getMainLooper()) {
             @Override
@@ -88,6 +121,16 @@ public class SearchForm extends AppCompatActivity {
 
             }
         };
+
+        for (int i=0;i<ListDbAll.size();i++)
+        {
+            listDbSerial.add(ListDbAll.get(i).getSpoolNo());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                (this,android.R.layout.select_dialog_item,listDbSerial);
+
+        accession_no.setThreshold(2);
+        accession_no.setAdapter(adapter);
 
         uhf.setKeyEventCallback(new KeyEventCallback() {
             @Override

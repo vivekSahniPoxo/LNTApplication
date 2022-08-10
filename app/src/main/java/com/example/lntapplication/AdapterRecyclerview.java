@@ -34,7 +34,12 @@ public class AdapterRecyclerview extends RecyclerView.Adapter<AdapterRecyclervie
     public void onBindViewHolder(@NonNull Myviewholder holder, int position) {
         BleDeviceDetails details = list.get(position);
         holder.textView.setText(details.getName());
-
+holder.itemView.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        reportListener.onItemClick(holder.getLayoutPosition());
+    }
+});
 
     }
 
@@ -51,12 +56,12 @@ public class AdapterRecyclerview extends RecyclerView.Adapter<AdapterRecyclervie
             super(itemView);
             layout = itemView.findViewById(R.id.layoutlist);
             textView = itemView.findViewById(R.id.textView13);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    reportListener.onItemClick(getAdapterPosition());
-                }
-            });
+//            itemView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    reportListener.onItemClick(getAdapterPosition());
+//                }
+//            });
         }
 
     }

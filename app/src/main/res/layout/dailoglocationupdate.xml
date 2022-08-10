@@ -28,7 +28,7 @@
         android:layout_marginTop="8dp"
         android:text="Do you want to update the Location?"
         android:textAlignment="center"
-        android:textColor="#D50A0A"
+        android:textColor="@color/black"
         android:textSize="18dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
