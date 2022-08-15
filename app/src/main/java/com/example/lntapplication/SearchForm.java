@@ -89,6 +89,12 @@ public class SearchForm extends AppCompatActivity {
         this.registerReceiver(broadcastReceiver, filter);
         ListDbAll=reportDb.getAllContacts();
 
+ New_.setOnClickListener(new View.OnClickListener() {
+     @Override
+     public void onClick(View view) {
+        Clear();
+     }
+ });
 
        SelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
            @Override
@@ -355,4 +361,13 @@ public class SearchForm extends AppCompatActivity {
         return list;
     }
 
+    //Method for Clear Data from Components
+    public void Clear() {
+        list_data_Recyclerview.clear();
+        adapter_list = new Adapter_list(list_data_Recyclerview, getApplicationContext());
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        recyclerView.setAdapter(adapter_list);
+//        search_data.setText("");
+//        accession_no.setText("");
+    }
 }

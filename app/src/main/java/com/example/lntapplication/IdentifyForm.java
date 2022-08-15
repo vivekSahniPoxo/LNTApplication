@@ -95,11 +95,13 @@ public class IdentifyForm extends AppCompatActivity {
                     public void onClick(View view) {
                         if (editText.length() > 0) {
                             if (spoolID != null) {
+
                                 int a = reportDb.UpdateLocation(editText.getText().toString().trim(), spoolID);
                                 if (a == 1) {
+                                    YearOfPublication.setText(editText.getText().toString().trim());
+
                                     editText.setText("");
                                     alertDialogAndroid.dismiss();
-                                    YearOfPublication.setText(editText.getText().toString().trim());
                                     Toast.makeText(IdentifyForm.this, "Location Update  Successfully...", Toast.LENGTH_SHORT).show();
                                 } else {
                                     alertDialogAndroid.dismiss();

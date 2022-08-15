@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     TextView StatusBTtxt;
     BluetoothAdapter bluetoothAdapter;
     ImageView setting;
-    String DNSAddress=null;
+    String DNSAddress="null";
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -111,15 +111,21 @@ public class MainActivity extends AppCompatActivity {
                     ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Service.CONNECTIVITY_SERVICE);
 
                     /* you can print your active network via using below */
-                    Log.i("myNetworkType: ", connectivityManager.getActiveNetworkInfo().getTypeName());
+//                    Log.i("myNetworkType: ", connectivityManager.getActiveNetworkInfo().getTypeName());
                     WifiManager wifiManager= (WifiManager) getApplicationContext().getSystemService(getApplicationContext().WIFI_SERVICE);
 
 
-
-
-                    Log.i("ip address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getLinkAddresses().toString());
-                    Log.i("dns address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString());
-                    DNSAddress=connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString();
+//
+//
+//                    Log.i("ip address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getLinkAddresses().toString());
+//                    Log.i("dns address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString());
+                  try{
+                      DNSAddress=connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString();
+                  }catch (Exception e)
+                  {
+                      e.printStackTrace();
+                      Toast.makeText(MainActivity.this, "Unable to find Network", Toast.LENGTH_SHORT).show();
+                  }
 
 
                     StatusTable = reportDb.GetDataInfo();
@@ -150,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
                     }}else {
 //                        ShowDailogBox();
-                        Toast.makeText(MainActivity.this, "No is Secure network", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Server Error", Toast.LENGTH_SHORT).show();
                     }
 
 
