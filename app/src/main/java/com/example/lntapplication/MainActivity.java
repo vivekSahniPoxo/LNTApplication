@@ -148,15 +148,16 @@ public class MainActivity extends AppCompatActivity {
 //                            listDB = reportDb.getAllContacts();
 //                            submit_Report(DateNow);
 //                        Toast.makeText(MainActivity.this, "Start Updating....", Toast.LENGTH_SHORT).show();
-                    } else {
+                    }
+                    else {
                         FetchData();
                         dialog.setCancelable(false);
                         dialog.setMessage("Fetching Latest Data...");
                         dialog.show();
 
 //                        Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
-
                     }
+
                     }
                     else {
 //                        ShowDailogBox();

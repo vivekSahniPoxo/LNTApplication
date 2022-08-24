@@ -1,9 +1,11 @@
 package com.example.lntapplication;
 
 public class ApiUrl {
-    public static String baseUrl = "http://164.52.223.163:4512/api/";
+    public static String baseUrl = "http://127.0.0.1:82/api/";
 
-//    public static String baseUrl =  "http://mudvprfidiis:82/api/";
+//    public static String baseUrl =  "http://164.52.223.163:4512/api/";
+
+
 
     public static final String SearchApi = baseUrl + "GetProductDetail?serialno=";
     public static final String IdentifyApi = baseUrl + "SearchByRfid?rfidno=";
@@ -14,6 +16,7 @@ public class ApiUrl {
     public static final String GetAllData = baseUrl + "GetProducts";
     public static final String GetUpdateData = baseUrl + "SyncUpdateProducts";
 
+    public static final String SiteNetworkAddress = "[/192.168.1.1]";
 
 
 //    public static final String ScannedItemList = baseUrl + "ReadRfidByDate?Date=";
