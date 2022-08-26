@@ -370,4 +370,10 @@ public class SearchForm extends AppCompatActivity {
 //        search_data.setText("");
 //        accession_no.setText("");
     }
+//    @Override
+//    public void onBackPressed() {
+//        super.onBackPressed();
+//        uhf.free();
+//
+//    }
 }

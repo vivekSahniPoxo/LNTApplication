@@ -356,6 +356,11 @@ public class IdentifyForm extends AppCompatActivity {
                 .setNegativeButton("No", null)
                 .show();
     }
-
+//    @Override
+//    public void onBackPressed() {
+//        super.onBackPressed();
+//        uhf.free();
+//
+//    }
 
 }

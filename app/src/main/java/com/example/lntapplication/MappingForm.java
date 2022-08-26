@@ -357,5 +357,10 @@ dialog.dismiss();
                 .show();
     }
 
-
+//    @Override
+//    public void onBackPressed() {
+//        super.onBackPressed();
+//    uhf.free();
+//
+//    }
 }
