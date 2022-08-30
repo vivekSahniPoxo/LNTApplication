@@ -232,7 +232,7 @@ public class MappingForm extends AppCompatActivity {
 
     private void SetupID(List<ReportDatabase> listDB) {
         for (int i = 0; i < listDB.size(); i++) {
-            listId.add(listDB.get(i).getSpoolNo());
+            listId.add(listDB.get(i).getSapNo());
 
         }
         final ArrayAdapter<String> SpinnerCountrty = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listId);

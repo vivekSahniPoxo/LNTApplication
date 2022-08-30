@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
                     StatusTable = reportDb.GetDataInfo();
                     System.out.print("System " + StatusTable);
-//                    if (DNSAddress.equals("[/192.168.1.1]")){
+                    if (DNSAddress.equals("[/192.168.1.1]")){
                     // Do whatever here
                     if (StatusTable) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -158,11 +158,11 @@ public class MainActivity extends AppCompatActivity {
 //                        Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
                     }
 
-//                    }
-//                    else {
-////                        ShowDailogBox();
-//                        Toast.makeText(MainActivity.this, "Server Error", Toast.LENGTH_SHORT).show();
-//                    }
+                    }
+                    else {
+//                        ShowDailogBox();
+                        Toast.makeText(MainActivity.this, "Server Error", Toast.LENGTH_SHORT).show();
+                    }
 
 
 //                    FetchData();

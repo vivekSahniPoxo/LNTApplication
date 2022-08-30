@@ -45,7 +45,7 @@ public class IdentifyForm extends AppCompatActivity {
     public List<String> tempList;
     String epc;
     boolean bleStatus;
-    String spoolID;
+    String spoolID,Sapno;
     private List<ReportDatabase> listDetails;
 
     @Override
@@ -94,10 +94,12 @@ public class IdentifyForm extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         if (editText.length() > 0) {
-                            if (spoolID != null) {
+                            if (Sapno != null) {
 
-                                int a = reportDb.UpdateLocation(editText.getText().toString().trim(), spoolID);
-                                if (a == 1) {
+                                int a = reportDb.UpdateLocation(editText.getText().toString().trim(), Sapno);
+                                Toast.makeText(IdentifyForm.this, "Value "+String.valueOf(a), Toast.LENGTH_SHORT).show();
+                               System.out.println("Value of Return Type"+a);
+                                if (a == 1 || a==2) {
                                     YearOfPublication.setText(editText.getText().toString().trim());
 
                                     editText.setText("");
@@ -236,6 +238,7 @@ public class IdentifyForm extends AppCompatActivity {
         Title.setText(listDetails.get(0).getProductId());
         YearOfPublication.setText(listDetails.get(0).getLocation());
         spoolID = listDetails.get(0).getSpoolNo();
+        Sapno=listDetails.get(0).getSapNo();
         dialog.dismiss();
     }
 

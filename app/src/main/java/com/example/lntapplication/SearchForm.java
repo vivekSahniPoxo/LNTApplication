@@ -130,7 +130,7 @@ public class SearchForm extends AppCompatActivity {
 
         for (int i=0;i<ListDbAll.size();i++)
         {
-            listDbSerial.add(ListDbAll.get(i).getSpoolNo());
+            listDbSerial.add(ListDbAll.get(i).getSapNo());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<String>
                 (this,android.R.layout.select_dialog_item,listDbSerial);
