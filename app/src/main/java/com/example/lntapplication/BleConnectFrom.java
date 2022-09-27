@@ -81,8 +81,13 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
         backbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(BleConnectFrom.this,MainActivity.class));
-                finish();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(BleConnectFrom.this,MainActivity.class);
+                        startActivity(i);
+                    }
+                });
             }
         });
 
@@ -94,7 +99,7 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Log.i("Action", action);
-
+ 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 bleStatus.setText("Finished");
                 SearchScanButton.setEnabled(true);
@@ -187,10 +192,16 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
     public void onItemClick(int position) {
 
 //        Toast.makeText(BleConnectFrom.this, "" + list.get(position).getName(), Toast.LENGTH_SHORT).show();
-        connect(list.get(position).getAddress());
-        dialog.setCancelable(false);
-        dialog.setMessage("Connecting Device...");
-        dialog.show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connect(list.get(position).getAddress());
+                dialog.setCancelable(false);
+                dialog.setMessage("Connecting Device...");
+                dialog.show();
+            }
+        });
+
     }
 
     class BTStatus implements ConnectionStatusCallback<Object> {
@@ -201,6 +212,7 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
                     BluetoothDevice device = (BluetoothDevice) device1;
                     if (connectionStatus == ConnectionStatus.CONNECTED) {
 //                        Toast.makeText(BleSetUPForm.this, "Connected Device ...", Toast.LENGTH_SHORT).show();
+//                        finish();
                         startActivity(new Intent(BleConnectFrom.this, MainActivity.class));
                         BTStatus=true;
                         dialog.dismiss();
@@ -221,6 +233,21 @@ public class BleConnectFrom extends AppCompatActivity implements bleListener {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(BleConnectFrom.this,MainActivity.class));
+//        finish();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Intent i = new Intent(BleConnectFrom.this,MainActivity.class);
+                startActivity(i);
+            }
+        });
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Intent i = new Intent(BleConnectFrom.this,MainActivity.class);
+//                startActivity(i);
+//            }
+//        }).start();
+
     }
 }

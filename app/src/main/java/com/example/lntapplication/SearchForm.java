@@ -1,12 +1,16 @@
 package com.example.lntapplication;
 
+import static java.lang.Thread.interrupted;
+import static java.lang.Thread.sleep;
+
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.ToneGenerator;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -17,28 +21,17 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 import com.rscja.deviceapi.interfaces.KeyEventCallback;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,12 +50,17 @@ public class SearchForm extends AppCompatActivity {
     private LooperDemo looperDemo;
     List<String> rfidlist = new ArrayList<>();
     ReportDb reportDb;
-    List<ReportDatabase> listDb,ListDbAll;
-    List<String> listDbSerial=new ArrayList<>();
+    List<ReportDatabase> listDb, ListDbAll;
+    String[] res = null;
+    List<String> listDbSerial = new ArrayList<>();
 
-    int count=0;
+    int count = 0;
     String buttonText;
-       CheckBox SelectAll;
+    CheckBox SelectAll;
+    boolean loopFlag = false;
+    private ToneGenerator toneG;
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,10 +74,11 @@ public class SearchForm extends AppCompatActivity {
         New_ = findViewById(R.id.New_accession);
         SubmitDetails = findViewById(R.id.buttonrfidDetails);
         reportDb = new ReportDb(this);
-        SelectAll=findViewById(R.id.checkBox_SelectAll);
-
+        SelectAll = findViewById(R.id.checkBox_SelectAll);
         listDb = new ArrayList<>();
         uhf.init(this);
+        uhf.setPower(30);
+
         looperDemo = new LooperDemo();
         dialog = new ProgressDialog(this);
         IntentFilter filter = new IntentFilter();
@@ -87,36 +86,35 @@ public class SearchForm extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         this.registerReceiver(broadcastReceiver, filter);
-        ListDbAll=reportDb.getAllContacts();
+        ListDbAll = reportDb.getAllContacts();
 
- New_.setOnClickListener(new View.OnClickListener() {
-     @Override
-     public void onClick(View view) {
-        Clear();
-     }
- });
+        New_.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Clear();
+            }
+        });
 
-       SelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-           @Override
-           public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-               if (SelectAll.isChecked())
-               {
-                   if (count==0){
-                       count=1;
-                   listDb=reportDb.getAllContacts();
-                   if (listDb.size() > 0) {
-                       dialog.setMessage("Fetching Data...");
-                       dialog.setCancelable(false);
-                       dialog.show();
-                       SetDataRecyclerview(listDb);
-                   } else {
-                       Toast.makeText(SearchForm.this, "No Data of this Spool number ", Toast.LENGTH_SHORT).show();
-                   }
-                   }
-               }
+        SelectAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (SelectAll.isChecked()) {
+                    if (count == 0) {
+                        count = 1;
+                        listDb = reportDb.getAllContacts();
+                        if (listDb.size() > 0) {
+                            dialog.setMessage("Fetching Data...");
+                            dialog.setCancelable(false);
+                            dialog.show();
+                            SetDataRecyclerview(listDb);
+                        } else {
+                            Toast.makeText(SearchForm.this, "No Data of this Spool number ", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
 
-           }
-       });
+            }
+        });
 
         handler = new Handler(getMainLooper()) {
             @Override
@@ -128,14 +126,13 @@ public class SearchForm extends AppCompatActivity {
             }
         };
 
-        for (int i=0;i<ListDbAll.size();i++)
-        {
+        for (int i = 0; i < ListDbAll.size(); i++) {
             listDbSerial.add(ListDbAll.get(i).getSapNo());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<String>
-                (this,android.R.layout.select_dialog_item,listDbSerial);
+                (this, android.R.layout.simple_list_item_1, listDbSerial);
 
-        accession_no.setThreshold(2);
+        accession_no.setThreshold(1);
         accession_no.setAdapter(adapter);
 
         uhf.setKeyEventCallback(new KeyEventCallback() {
@@ -208,35 +205,94 @@ public class SearchForm extends AppCompatActivity {
     private void Scan(String buttonText) {
         ArrayList list = new ArrayList();
         if (buttonText.matches("Start")) {
-            Search_btn.setText("STOP");
-            uhf.startInventoryTag();
-            List<UHFTAGInfo> info = uhf.readTagFromBufferList();
-            try {
-                for (int i = 0; i < info.size(); i++) {
-                    list.add(info.get(i).getEPC());
+            loopFlag = true;
+            list.clear();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Search_btn.setText("STOP");
+                    uhf.startInventoryTag();
+                    uhf.setBeep(true);
+                    while (loopFlag && !interrupted()) {
+                        try {
+                            UHFTAGInfo uhfTaginfo = uhf.readTagFromBuffer();
+                            String tag = uhfTaginfo.getEPC();
+                            if (tag != null && tag.length() > 0) {
+                                Log.e("Testing", "EPC:" + tag);
+                                if (needtoProcess(tag, list)) {
+
+                                    looperDemo.execute(() -> {
+                                        Message message = Message.obtain();
+                                        message.obj = list;
+                                        handler.sendMessage(message);
+                                    });
+                                    if (list_data_Recyclerview.size() == list.size()) {
+                                        StopSearch();
+                                    }
+                                    // toneG.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 200);
+
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
 
                 }
-//                adapter_list.getFilter(list);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            looperDemo.execute(() -> {
-                Message message = Message.obtain();
-                message.obj = list;
-                handler.sendMessage(message);
-            });
+            }).start();
 
 
 //                UHFTAGInfo info = uhf.readTagFromBuffer();
 
         } else {
-            add_accession_btn.setEnabled(true);
-            Search_btn.setText("Start");
-            uhf.stopInventory();
+            StopSearch();
 //            adapter_list.getFilter(list);
         }
 
 
+    }
+
+    public void StopSearch() {
+        try {
+            uhf.stopInventory();
+            add_accession_btn.setEnabled(true);
+            loopFlag = false;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Search_btn.setText("Start");
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public boolean needtoProcess(String strEPC, ArrayList list) {
+        if (strEPC == null || strEPC.equals("")) {
+            return false;
+        }
+        try {
+            if (list.contains(strEPC)) {
+                return false;
+            } else {
+                for (int i = 0; i < list_data_Recyclerview.size(); i++) {
+                    if (list_data_Recyclerview.get(i).getRfidNo().equals(strEPC)) {
+                        list.add(strEPC);
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private void SetDataRecyclerview(List<ReportDatabase> listDb) {
@@ -248,75 +304,6 @@ public class SearchForm extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         recyclerView.setAdapter(adapter_list);
         dialog.dismiss();
-    }
-
-    private void FetchData() throws JSONException {
-//        String url = "http://164.52.223.163:4510/api/GetAssetInfoBySearch?AssetId=" + accession_no.getText().toString();
-
-        RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest jsObjRequest = new StringRequest(Request.Method.GET, ApiUrl.SearchApi + accession_no.getText().toString(), new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-//                    JSONArray array = new JSONArray(response);
-//                    if (array.length() == 0) {
-//                        dialog.dismiss();
-//                        Toast.makeText(SearchForm.this, "No Data Available of this Access Id...", Toast.LENGTH_SHORT).show();
-//                    } else {
-
-//                        for (int i = 0; i < array.length(); i++) {
-                    JSONObject object = new JSONObject(response);
-
-                    String productId = object.optString("productId");
-                    String serialNo = object.optString("serialNo");
-                    String drawingNo = object.optString("drawingNo");
-                    String sapNo = object.optString("sapNo");
-                    String spoolNo = object.optString("spoolNo");
-                    String weight = object.optString("weight");
-                    String contractor = object.optString("contractor");
-                    String location = object.optString("location");
-                    String rfidNo = object.optString("rfidNo");
-                    String remarks = object.optString("remarks");
-                    String createdAt = object.optString("createdAt");
-                    String updatedAt = object.optString("updatedAt");
-
-
-//                            dialog.dismiss();
-
-                    list_data_Recyclerview.add(new Data_Model_Search(productId, serialNo, drawingNo, sapNo, spoolNo, weight, contractor, location, rfidNo, remarks, createdAt, updatedAt));
-                    adapter_list = new Adapter_list(list_data_Recyclerview, getApplicationContext());
-                    recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-                    recyclerView.setAdapter(adapter_list);
-                    if (list_data_Recyclerview.size() > 0) {
-                        Search_btn.setEnabled(true);
-//                                dialog.dismiss();
-                    }
-//                        }
-
-//                    }
-
-                    Log.e("response", response.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Toast.makeText(SearchForm.this, "Server Error", Toast.LENGTH_SHORT).show();
-//                    dialog.dismiss();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-//                dialog.dismiss();
-                Toast.makeText(SearchForm.this, "" + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        jsObjRequest.setRetryPolicy(new DefaultRetryPolicy(
-                10000,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        queue.add(jsObjRequest);
-
-//        queue.add(jsObjRequest);
-
     }
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -335,28 +322,11 @@ public class SearchForm extends AppCompatActivity {
         }
     };
 
-    public void ShowDailog() {
-        new AlertDialog.Builder(this)
-                .setIcon(R.drawable.exitapp)
-                .setTitle("Connect Bluetooth")
-                .setMessage("Do You want to Connect device with bluetooth ?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        uhf.free();
-                        startActivity(new Intent(SearchForm.this, BleSetUPForm.class));
-                        finish();
-                    }
-
-                })
-                .setNegativeButton("No", null)
-                .show();
-    }
 
     private synchronized List<UHFTAGInfo> getUHFInfo() {
         List<UHFTAGInfo> list = null;
 
-        //读写器主板版本 2.20-2.29 readTagFromBufferList 函数支持输出Rssi，无需调用readTagFromBufferList_EpcTidUser
+        //The reader board version 2.20-2.29 readTagFromBufferList function supports output Rssi, no need to call readTagFromBufferList_EpcTidUser
         list = uhf.readTagFromBufferList();
         return list;
     }
@@ -370,10 +340,12 @@ public class SearchForm extends AppCompatActivity {
 //        search_data.setText("");
 //        accession_no.setText("");
     }
-//    @Override
-//    public void onBackPressed() {
-//        super.onBackPressed();
-//        uhf.free();
-//
-//    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        uhf.stopInventory();
+        finish();
+
+    }
 }

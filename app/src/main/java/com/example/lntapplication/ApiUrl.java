@@ -1,9 +1,9 @@
 package com.example.lntapplication;
 
 public class ApiUrl {
-    public static String baseUrl = "http://192.168.1.118:82/api/";
-
-//    public static String baseUrl =  "http://164.52.223.163:4512/api/";
+    public static String baseUrl = "http://192.168.1.112:82/api/";
+//    public static String baseUrl = "http://192.168.1.118:82/api/";
+// public static String baseUrl =  "http://164.52.223.163:4512/api/";
 
 
 

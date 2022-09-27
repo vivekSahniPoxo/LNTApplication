@@ -5,7 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 
+import androidx.annotation.RequiresApi;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -192,6 +198,44 @@ public class ReportDb extends SQLiteOpenHelper {
         return contactList;
     }
 
+
+
+
+    public int GetCountUnMAppedData() {
+        List<ReportDatabase> contactList = new ArrayList<ReportDatabase>();
+              String selectQuery = "SELECT * FROM " + TABLE_Report + " WHERE " + Status + " = '" + "True" + "'";
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        int count=0;
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                ReportDatabase dataModelClass = new ReportDatabase();
+                dataModelClass.setProductId(cursor.getString(0));
+                dataModelClass.setSerialNo(cursor.getString(1));
+                dataModelClass.setDrawingNo(cursor.getString(2));
+                dataModelClass.setSapNo(cursor.getString(3));
+                dataModelClass.setSpoolNo(cursor.getString(4));
+                dataModelClass.setWeight(cursor.getString(5));
+                dataModelClass.setContractor(cursor.getString(6));
+                dataModelClass.setLocation(cursor.getString(7));
+                dataModelClass.setRfidNo(cursor.getString(8));
+                dataModelClass.setRemarks(cursor.getString(9));
+                dataModelClass.setCreatedAt(cursor.getString(10));
+                dataModelClass.setUpdatedAt(cursor.getString(11));
+                dataModelClass.setStatus(cursor.getString(12));
+                // Adding contact to list
+                count++;
+                contactList.add(dataModelClass);
+            } while (cursor.moveToNext());
+        }
+        // return contact list
+        return count;
+    }
+
+
+
     public boolean GetDataInfo() {
         String selectQuery = "SELECT  * FROM " + TABLE_Report;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -289,12 +333,19 @@ public class ReportDb extends SQLiteOpenHelper {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public int UpdateLocation(String Location1, String valueID) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
 
         values.put(Location, Location1);
+        values.put(Status,"True");
+        values.put(UpdatedAt, now.toString());
+
+
 
 
 

@@ -46,6 +46,7 @@ import java.util.List;
 
 public class MappingForm extends AppCompatActivity {
     String epc, result;
+//    UHFTAGInfo result;
     Context context = this;
     CardView ReadingCard;
     boolean bleStatus;
@@ -66,6 +67,7 @@ public class MappingForm extends AppCompatActivity {
 
         dialog=new ProgressDialog(this);
         uhf.init(this);
+        uhf.setPower(10);
         ReadingCard = findViewById(R.id.button_Scan);
         assetId = findViewById(R.id.spinner2value);
         Search = findViewById(R.id.Stop_Search);
@@ -96,6 +98,7 @@ public class MappingForm extends AppCompatActivity {
             public void onClick(View view) {
 
                 result = uhf.readData("00000000", 1, 2, 6);
+//                result=uhf.inventorySingleTag();
 //                UHFTAGInfo info = uhf.readTagFromBuffer();
 //                result= info.getEPC();
 
@@ -125,6 +128,7 @@ public class MappingForm extends AppCompatActivity {
                 if (i==1)
                 {
                     result = uhf.readData("00000000", 1, 2, 6);
+//                    result=uhf.inventorySingleTag();
                     if (!(result ==null))
                     {
                         Toast.makeText(MappingForm.this, ""+result, Toast.LENGTH_SHORT).show();
@@ -158,7 +162,7 @@ public class MappingForm extends AppCompatActivity {
                             dialog.setMessage("Mapping Data...");
                             dialog.setCancelable(false);
                             dialog.show();
-                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"), AssetKey);
 //                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
                             if (a == 1) {
@@ -179,7 +183,7 @@ public class MappingForm extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
 
-                                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, result, Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+                                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"), AssetKey);
 //                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
                                             if (a == 1) {
@@ -357,10 +361,11 @@ dialog.dismiss();
                 .show();
     }
 
-//    @Override
-//    public void onBackPressed() {
-//        super.onBackPressed();
-//    uhf.free();
-//
-//    }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+//        uhf.free();
+        finish();
+
+    }
 }

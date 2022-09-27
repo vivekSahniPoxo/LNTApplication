@@ -54,7 +54,7 @@ public class Splash_screen extends AppCompatActivity {
 //                break;
 //            }
 
-        if (devicemacaddress.equals("CC:C4:55:50:26:B3")||devicemacaddress.equals("CC:84:86:11:8C:72")||devicemacaddress.equals("CC:F9:60:60:C8:D6")||devicemacaddress.equals("CC:EF:35:F4:36:3B")||devicemacaddress.equals("CC:FB:F4:C1:E3:BC"))
+        if (devicemacaddress.equals("CC:C4:55:50:26:B3")||devicemacaddress.equals("CC:84:86:11:8C:72")||devicemacaddress.equals("CC:F9:60:60:C8:D6")||devicemacaddress.equals("CC:EF:35:F4:36:3B")||devicemacaddress.equals("CC:FB:F4:C1:E3:BC")||devicemacaddress.equals("00:70:40:07:49:79"))
         {
             ValidateExpire();
         }else {

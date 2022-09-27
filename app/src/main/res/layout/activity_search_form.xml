@@ -153,6 +153,8 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="8dp"
                         android:text="Search All"
+
+                        android:visibility="gone"
                         app:layout_constraintBottom_toTopOf="@+id/Reading_btn"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/Accession_no" />

@@ -49,9 +49,8 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
         holder.h4.setText("Spool Number :");
 
 //Change color if data found
-        String Colorname =model.getColor();
-        switch (Colorname)
-        {
+        String Colorname = model.getColor();
+        switch (Colorname) {
             case "Green":
 
                 holder.ListLayout.setBackgroundColor(Color.rgb(46, 139, 87));
@@ -63,7 +62,7 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
                 holder.h3.setTextColor(Color.parseColor("#FFFFFF"));
                 holder.h2.setTextColor(Color.parseColor("#FFFFFF"));
                 holder.h1.setTextColor(Color.parseColor("#FFFFFF"));
-            break;
+                break;
 //
 //            case "Red":
 //                holder.ListLayout.setBackgroundColor(Color.RED);
@@ -195,14 +194,13 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
     public void getFilter(@NonNull List search_value) {
         for (Data_Model_Search row : list) {
             if (row.getRfidNo() != null) {
-                for (int i=0;i<search_value.size();i++){
-                if (row.getRfidNo().equals(search_value.get(i))) {
-                    row.setColor("Green");
-                    notifyDataSetChanged();
-                    break;
+                for (int i = 0; i < search_value.size(); i++) {
+                    if (row.getRfidNo().equals(search_value.get(i))) {
+                        row.setColor("Green");
+                        notifyDataSetChanged();
+                        break;
 
-                }
-                else {
+                    } else {
 //                    if (row.getColor()=="Green")
 //                    {
 //                        notifyDataSetChanged();
@@ -213,7 +211,8 @@ public class Adapter_list extends RecyclerView.Adapter<Adapter_list.myviewholder
 //                        notifyDataSetChanged();
 //                        break;
 //                    }
-                }}
+                    }
+                }
 //                else {
 //                    Toast.makeText(context.getApplicationContext(), "Data Not Found", Toast.LENGTH_SHORT).show();
 //                    break;

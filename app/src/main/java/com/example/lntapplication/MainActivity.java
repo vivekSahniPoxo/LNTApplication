@@ -1,6 +1,7 @@
 package com.example.lntapplication;
 
 import static com.example.lntapplication.BleConnectFrom.BTStatus;
+import static com.example.lntapplication.BleSetUPForm.BTStatus1;
 
 import android.app.ProgressDialog;
 import android.app.Service;
@@ -11,18 +12,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.Image;
 import android.net.ConnectivityManager;
-import android.net.DhcpInfo;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -49,8 +44,6 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -70,12 +63,14 @@ public class MainActivity extends AppCompatActivity {
     BluetoothAdapter bluetoothAdapter;
     ImageView setting;
     String DNSAddress="null";
+    TextView countmap;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        countmap=findViewById(R.id.textView15);
         mappingForm = findViewById(R.id.Mapping);
         IdentifyForm = findViewById(R.id.Identifyform);
         Searchform = findViewById(R.id.SearchForml);
@@ -104,13 +99,12 @@ public class MainActivity extends AppCompatActivity {
         wifiCheck = connectionManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 
-        SyncBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Service.CONNECTIVITY_SERVICE);
 
-                    /* you can print your active network via using below */
+        SyncBtn.setOnClickListener(view -> {
+            try {
+                ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext().getSystemService(Service.CONNECTIVITY_SERVICE);
+
+                /* you can print your active network via using below */
 //                    Log.i("myNetworkType: ", connectivityManager.getActiveNetworkInfo().getTypeName());
 //                    WifiManager wifiManager= (WifiManager) getApplicationContext().getSystemService(getApplicationContext().WIFI_SERVICE);
 //
@@ -119,56 +113,55 @@ public class MainActivity extends AppCompatActivity {
 ////
 //                    Log.i("ip address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getLinkAddresses().toString());
 //                    Log.i("dns address ", connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString());
-                  try{
-                      DNSAddress=connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString();
-                      System.out.print("My DNS Address"+DNSAddress);
+              try{
+                  DNSAddress=connectivityManager.getLinkProperties(connectivityManager.getActiveNetwork()).getDnsServers().toString();
+                  System.out.print("My DNS Address"+DNSAddress);
 //                      Toast.makeText(MainActivity.this, ""+DNSAddress, Toast.LENGTH_SHORT).show();
-                  }catch (Exception e)
-                  {
-                      e.printStackTrace();
-                      Toast.makeText(MainActivity.this, "Unable to find Network", Toast.LENGTH_SHORT).show();
-                  }
+              }catch (Exception e)
+              {
+                  e.printStackTrace();
+                  Toast.makeText(MainActivity.this, "Unable to find Network", Toast.LENGTH_SHORT).show();
+              }
 
 
-                    StatusTable = reportDb.GetDataInfo();
-                    System.out.print("System " + StatusTable);
-                    if (DNSAddress.equals("[/192.168.1.1]")){
-                    // Do whatever here
-                    if (StatusTable) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-                            LocalDateTime now = LocalDateTime.now();
-                            dialog.setCancelable(false);
-                            dialog.setMessage("Uploading Data...");
-                            dialog.show();
+                StatusTable = reportDb.GetDataInfo();
+                System.out.print("System " + StatusTable);
+//                    if (DNSAddress.equals("[/192.168.1.1]")){
+                // Do whatever here
+                if (StatusTable) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                        LocalDateTime now = LocalDateTime.now();
+                        dialog.setCancelable(false);
+                        dialog.setMessage("Uploading Data...");
+                        dialog.show();
 //                                String DateNow=now.toString();
-                            listDB = reportDb.getAllContacts();
-                            submit_Report(now);
-                        }
+                        listDB = reportDb.getAllContacts();
+                        submit_Report(now);
+                    }
 //                            listDB = reportDb.getAllContacts();
 //                            submit_Report(DateNow);
 //                        Toast.makeText(MainActivity.this, "Start Updating....", Toast.LENGTH_SHORT).show();
-                    }
-                    else {
-                        FetchData();
-                        dialog.setCancelable(false);
-                        dialog.setMessage("Fetching Latest Data...");
-                        dialog.show();
+                }
+                else {
+                    FetchData();
+                    dialog.setCancelable(false);
+                    dialog.setMessage("Fetching Latest Data...");
+                    dialog.show();
 
 //                        Toast.makeText(MainActivity.this, "No Data  Getting....", Toast.LENGTH_SHORT).show();
-                    }
+                }
 
-                    }
-                    else {
-//                        ShowDailogBox();
-                        Toast.makeText(MainActivity.this, "Server Error", Toast.LENGTH_SHORT).show();
-                    }
+//                    }
+//                    else {
+////                        ShowDailogBox();
+//                        Toast.makeText(MainActivity.this, "Server Error", Toast.LENGTH_SHORT).show();
+//                    }
 
 
 //                    FetchData();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         });
 
@@ -176,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         Searchform.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BTStatus){
+                if (BTStatus1){
                 startActivity(new Intent(MainActivity.this, SearchForm.class));}else {
                     Toast.makeText(MainActivity.this, "Device is not Connected With RFid Reader...", Toast.LENGTH_SHORT).show();
                 }
@@ -185,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         IdentifyForm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BTStatus) {
+                if (BTStatus1) {
                     startActivity(new Intent(MainActivity.this, IdentifyForm.class));
                 }else {
                     Toast.makeText(MainActivity.this, "Device is not Connected With RFid Reader...", Toast.LENGTH_SHORT).show();
@@ -195,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         mappingForm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (BTStatus) {
+                if (BTStatus1) {
                     startActivity(new Intent(MainActivity.this, MappingForm.class));
                 }
                 else {
@@ -250,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(String response) {
                 try {
-                    dialog.dismiss();
+
 
                     JSONArray array = new JSONArray(response);
                     if (array.length() == 0) {
@@ -280,7 +273,10 @@ public class MainActivity extends AppCompatActivity {
 
                             reportDb.addContact(new ReportDatabase(productId, serialNo, drawingNo, sapNo, spoolNo, weight, contractor, location, rfidNo, remarks, createdAt, updatedAt, "False"));
                         }
+                        int count = reportDb.GetCountUnMAppedData();
+                        countmap.setText("Remaining Sync: "+count);
                         Log.e("response", response.toString());
+                        dialog.dismiss();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -338,11 +334,13 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject object1 = new JSONObject(response);
                     dialog.dismiss();
+
                     String status = object1.getString("status");
                     String message = object1.getString("message");
                     Log.i("Update Data Message", message);
                     if (status.matches("true")) {
 
+                        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
                         FetchData();
                         dialog.setCancelable(false);
                         dialog.setMessage("Getting Latest Data...");
@@ -450,7 +448,7 @@ public class MainActivity extends AppCompatActivity {
 
         }else { if (bluetoothAdapter.isEnabled())
         {
-            if (BTStatus)
+            if (BTStatus1)
             {
                 StatusBTImg.setImageResource(R.drawable.ic_baseline_bluetooth_connected_24);
                 StatusBTtxt.setText("Bluetooth Connected");
@@ -461,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
             StatusBTImg.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(MainActivity.this,BleConnectFrom.class));
+                    startActivity(new Intent(MainActivity.this,BleSetUPForm.class));
                 }
             });
 
@@ -481,9 +479,16 @@ public class MainActivity extends AppCompatActivity {
             StatusBTImg.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(MainActivity.this,BleConnectFrom.class));
+                    startActivity(new Intent(MainActivity.this,BleSetUPForm.class));
                 }
             });
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        int count = reportDb.GetCountUnMAppedData();
+        countmap.setText("Remaining Sync :"+count);
     }
 }

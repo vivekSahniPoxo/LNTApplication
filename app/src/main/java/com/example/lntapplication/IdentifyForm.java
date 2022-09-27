@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -26,6 +28,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
 import com.rscja.deviceapi.interfaces.KeyEventCallback;
 
 import org.json.JSONException;
@@ -45,7 +48,7 @@ public class IdentifyForm extends AppCompatActivity {
     public List<String> tempList;
     String epc;
     boolean bleStatus;
-    String spoolID,Sapno;
+    String spoolID, Sapno;
     private List<ReportDatabase> listDetails;
 
     @Override
@@ -91,15 +94,16 @@ public class IdentifyForm extends AppCompatActivity {
                 android.app.AlertDialog alertDialogAndroid = alertDialogBuilderUserInput.create();
 
                 updatebtn.setOnClickListener(new View.OnClickListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onClick(View view) {
                         if (editText.length() > 0) {
                             if (Sapno != null) {
 
                                 int a = reportDb.UpdateLocation(editText.getText().toString().trim(), Sapno);
-                                Toast.makeText(IdentifyForm.this, "Value "+String.valueOf(a), Toast.LENGTH_SHORT).show();
-                               System.out.println("Value of Return Type"+a);
-                                if (a == 1 || a==2) {
+                                Toast.makeText(IdentifyForm.this, "Value " + String.valueOf(a), Toast.LENGTH_SHORT).show();
+                                System.out.println("Value of Return Type" + a);
+                                if (a == 1 || a == 2) {
                                     YearOfPublication.setText(editText.getText().toString().trim());
 
                                     editText.setText("");
@@ -136,7 +140,7 @@ public class IdentifyForm extends AppCompatActivity {
         });
         uhf.init(this);
         //Listeners
-
+        uhf.setPower(10);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -144,26 +148,32 @@ public class IdentifyForm extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         this.registerReceiver(broadcastReceiver, filter);
 
+//
 
         uhf.setKeyEventCallback(new KeyEventCallback() {
             @Override
             public void onKeyDown(int i) {
                 if (i == 1) {
 //                    if (bleStatus) {
-                    String data = "";
+                    String data = null;
                     data = uhf.readData("00000000", 1, 2, 6);
-                    listDetails = reportDb.getAllDetails(data);
-                    if (listDetails.size() > 0) {
-                        dialog.setMessage("Fetching Data...");
-                        dialog.setCancelable(false);
-                        dialog.show();
-                        SetDAta(listDetails);
+//                    UHFTAGInfo data=uhf.inventorySingleTag();
+                    if (data == null) {
+                        Toast.makeText(IdentifyForm.this, "Please Close the Tag to Reader...", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(IdentifyForm.this, data + " no Data for this Tag...", Toast.LENGTH_SHORT).show();
-                    }
+                        listDetails = reportDb.getAllDetails(data);
+                        if (listDetails.size() > 0) {
+                            dialog.setMessage("Fetching Data...");
+                            dialog.setCancelable(false);
+                            dialog.show();
+                            SetDAta(listDetails);
+                        } else {
+                            Toast.makeText(IdentifyForm.this, data + " No Data for this Tag...", Toast.LENGTH_SHORT).show();
+                        }
 //                    }else {
 //                        ShowDailog();
 //                    }
+                    }
                 }
             }
 
@@ -178,16 +188,24 @@ public class IdentifyForm extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                if (bleStatus) {
-                String data = "";
+                String data = null;
                 data = uhf.readData("00000000", 1, 2, 6);
-                listDetails = reportDb.getAllDetails(data);
-                if (listDetails.size() > 0) {
-                    SetDAta(listDetails);
-//                        dialog.setMessage("Fetching Data...");
-//                        dialog.setCancelable(false);
-//                        dialog.show();
+//                UHFTAGInfo data=uhf.inventorySingleTag();
+                if (data == null) {
+                    Toast.makeText(IdentifyForm.this, "Please Close the Tag to Reader...", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(IdentifyForm.this, data + " no Data for this Tag...", Toast.LENGTH_SHORT).show();
+                    listDetails = reportDb.getAllDetails(data);
+                    if (listDetails.size() > 0) {
+                        dialog.setMessage("Fetching Data...");
+                        dialog.setCancelable(false);
+                        dialog.show();
+                        SetDAta(listDetails);
+                    } else {
+                        Toast.makeText(IdentifyForm.this, data + " No Data for this Tag...", Toast.LENGTH_SHORT).show();
+                    }
+//                    }else {
+//                        ShowDailog();
+//                    }
                 }
 
 //                }
@@ -238,7 +256,7 @@ public class IdentifyForm extends AppCompatActivity {
         Title.setText(listDetails.get(0).getProductId());
         YearOfPublication.setText(listDetails.get(0).getLocation());
         spoolID = listDetails.get(0).getSpoolNo();
-        Sapno=listDetails.get(0).getSapNo();
+        Sapno = listDetails.get(0).getSapNo();
         dialog.dismiss();
     }
 
@@ -359,11 +377,13 @@ public class IdentifyForm extends AppCompatActivity {
                 .setNegativeButton("No", null)
                 .show();
     }
-//    @Override
-//    public void onBackPressed() {
-//        super.onBackPressed();
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
 //        uhf.free();
-//
-//    }
+        finish();
+
+    }
 
 }

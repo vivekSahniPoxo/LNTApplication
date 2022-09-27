@@ -34,6 +34,8 @@ public class BleSetUPForm extends AppCompatActivity {
     TextView bleStatus;
     Button SearchScanButton;
     ListView listView;
+    TextView back;
+    public static  boolean BTStatus1=false;
     RFIDWithUHFBLE uhf = RFIDWithUHFBLE.getInstance();
     BTStatus btStatus = new BTStatus();
     ArrayList<String> bluetoothDevices = new ArrayList<>();
@@ -49,11 +51,24 @@ public class BleSetUPForm extends AppCompatActivity {
         setContentView(R.layout.activity_ble_set_upform);
         bleStatus = findViewById(R.id.statusTextView);
         SearchScanButton = findViewById(R.id.button_Search);
+      back=findViewById(R.id.textView28);
         listView = findViewById(R.id.listView);
         uhf.init(this);
         dialog = new ProgressDialog(this);
 
 
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(BleSetUPForm.this,MainActivity.class);
+                        startActivity(i);
+                    }
+                });
+            }
+        });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -67,10 +82,14 @@ public class BleSetUPForm extends AppCompatActivity {
         intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         registerReceiver(broadcastReceiver, intentFilter);
 
+
         SearchScanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 searchFunction();
+                dialog.setCancelable(false);
+                dialog.setMessage("Searching Devices....");
+                dialog.show();
 
             }
         });
@@ -100,6 +119,7 @@ public class BleSetUPForm extends AppCompatActivity {
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 bleStatus.setText("Finished");
                 SearchScanButton.setEnabled(true);
+                dialog.dismiss();
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = device.getName();
@@ -130,6 +150,7 @@ public class BleSetUPForm extends AppCompatActivity {
                 bleStatus.setText("Searching...");
                 SearchScanButton.setEnabled(false);
                 arrayAdapter.notifyDataSetChanged();
+
 
             }
         });
@@ -185,15 +206,30 @@ public class BleSetUPForm extends AppCompatActivity {
 //                        Toast.makeText(BleSetUPForm.this, "Connected Device ...", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(BleSetUPForm.this, MainActivity.class));
                         dialog.dismiss();
+                        BTStatus1=true;
 
                     } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
                         Toast.makeText(BleSetUPForm.this, "Device Disconnect...", Toast.LENGTH_SHORT).show();
+
+                        dialog.dismiss();
                     } else {
                         Toast.makeText(BleSetUPForm.this, "Error Disconnect...", Toast.LENGTH_SHORT).show();
-
+                        dialog.dismiss();
                     }
                 }
             });
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Intent i = new Intent(BleSetUPForm.this,MainActivity.class);
+                startActivity(i);
+            }
+        });
     }
 }
