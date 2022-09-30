@@ -213,10 +213,11 @@ public class SearchForm extends AppCompatActivity {
                     Search_btn.setText("STOP");
                     uhf.startInventoryTag();
                     uhf.setBeep(true);
+                    UHFTAGInfo uhfTaginfo=null;
                     while (loopFlag && !interrupted()) {
                         try {
-                            UHFTAGInfo uhfTaginfo = uhf.readTagFromBuffer();
-                            String tag = uhfTaginfo.getEPC();
+                            uhfTaginfo = uhf.readTagFromBuffer();
+                            String tag = uhfTaginfo.getEPC().substring(4,28);
                             if (tag != null && tag.length() > 0) {
                                 Log.e("Testing", "EPC:" + tag);
                                 if (needtoProcess(tag, list)) {

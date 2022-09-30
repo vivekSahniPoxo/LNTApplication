@@ -140,7 +140,7 @@ public class IdentifyForm extends AppCompatActivity {
         });
         uhf.init(this);
         //Listeners
-        uhf.setPower(10);
+        uhf.setPower(5);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);

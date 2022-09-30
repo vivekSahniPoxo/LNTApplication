@@ -230,7 +230,7 @@
 
                     <TextView
                         android:id="@+id/textView12"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="24dp"
@@ -245,7 +245,7 @@
 
                     <TextView
                         android:id="@+id/textView16"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -305,7 +305,7 @@
 
                     <TextView
                         android:id="@+id/textView20"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -319,7 +319,7 @@
 
                     <TextView
                         android:id="@+id/textView21"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -333,7 +333,7 @@
 
                     <TextView
                         android:id="@+id/textView22"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -347,7 +347,7 @@
 
                     <TextView
                         android:id="@+id/textView23"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -361,7 +361,7 @@
 
                     <TextView
                         android:id="@+id/textView24"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
@@ -420,7 +420,7 @@
 
                     <TextView
                         android:id="@+id/textView29"
-                        android:layout_width="0dp"
+                        android:layout_width="120dp"
                         android:layout_height="20dp"
                         android:layout_marginStart="16dp"
                         android:layout_marginTop="8dp"
