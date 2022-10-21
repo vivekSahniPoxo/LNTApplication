@@ -1,9 +1,5 @@
 package com.example.lntapplication;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -17,12 +13,15 @@ import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.rscja.deviceapi.RFIDWithUHFBLE;
 import com.rscja.deviceapi.interfaces.ConnectionStatus;
@@ -35,15 +34,17 @@ public class BleSetUPForm extends AppCompatActivity {
     Button SearchScanButton;
     ListView listView;
     TextView back;
-    public static  boolean BTStatus1=false;
+    public static boolean BTStatus1 = false;
     RFIDWithUHFBLE uhf = RFIDWithUHFBLE.getInstance();
     BTStatus btStatus = new BTStatus();
     ArrayList<String> bluetoothDevices = new ArrayList<>();
     ArrayList<String> addresses = new ArrayList<>();
     ArrayList<String> names = new ArrayList<>();
-    ArrayAdapter arrayAdapter;
+        ArrayAdapter arrayAdapter;
+//    CustomAdapter arrayAdapter;
     BluetoothAdapter bluetoothAdapter;
     ProgressDialog dialog;
+    ArrayList<BleDeviceDetails> listdatable = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +52,7 @@ public class BleSetUPForm extends AppCompatActivity {
         setContentView(R.layout.activity_ble_set_upform);
         bleStatus = findViewById(R.id.statusTextView);
         SearchScanButton = findViewById(R.id.button_Search);
-      back=findViewById(R.id.textView28);
+        back = findViewById(R.id.textView28);
         listView = findViewById(R.id.listView);
         uhf.init(this);
         dialog = new ProgressDialog(this);
@@ -63,7 +64,8 @@ public class BleSetUPForm extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Intent i = new Intent(BleSetUPForm.this,MainActivity.class);
+                        bluetoothAdapter.cancelDiscovery();
+                        Intent i = new Intent(BleSetUPForm.this, MainActivity.class);
                         startActivity(i);
                     }
                 });
@@ -94,18 +96,18 @@ public class BleSetUPForm extends AppCompatActivity {
             }
         });
 
+//        arrayAdapter = new CustomAdapter(listdatable, this);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, bluetoothDevices);
         listView.setAdapter(arrayAdapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String addressDEvice = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(BleSetUPForm.this, "" + addressDEvice, Toast.LENGTH_SHORT).show();
-                connect(addressDEvice);
-                dialog.setCancelable(false);
-                dialog.setMessage("Connecting Device...");
-                dialog.show();
-            }
+        listView.setOnItemClickListener((adapterView, view, i, l) -> {
+            String addressDEvice = adapterView.getAdapter().getItem(i).toString();
+            Toast.makeText(BleSetUPForm.this, "" + addressDEvice, Toast.LENGTH_SHORT).show();
+//          /
+//            connect(namedecice);
+            connect(addressDEvice);
+            dialog.setCancelable(false);
+            dialog.setMessage("Connecting Device...");
+            dialog.show();
         });
     }
 
@@ -130,6 +132,7 @@ public class BleSetUPForm extends AppCompatActivity {
                 if (!addresses.contains(address)) {
                     addresses.add(address);
                     names.add(name);
+                    listdatable.add(new BleDeviceDetails(address, name));
                     String deviceString = "";
 //
 //                    }
@@ -140,6 +143,7 @@ public class BleSetUPForm extends AppCompatActivity {
             }
         }
     };
+
     public void searchFunction() {
         runOnUiThread(new Runnable() {
             @Override
@@ -206,7 +210,7 @@ public class BleSetUPForm extends AppCompatActivity {
 //                        Toast.makeText(BleSetUPForm.this, "Connected Device ...", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(BleSetUPForm.this, MainActivity.class));
                         dialog.dismiss();
-                        BTStatus1=true;
+                        BTStatus1 = true;
 
                     } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
                         Toast.makeText(BleSetUPForm.this, "Device Disconnect...", Toast.LENGTH_SHORT).show();
@@ -227,7 +231,9 @@ public class BleSetUPForm extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Intent i = new Intent(BleSetUPForm.this,MainActivity.class);
+
+                Intent i = new Intent(BleSetUPForm.this, MainActivity.class);
+
                 startActivity(i);
             }
         });

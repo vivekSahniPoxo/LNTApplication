@@ -28,7 +28,6 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="32dp"
-        android:layout_weight="2"
         android:text="Search Device"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,7 +40,8 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
-
+        android:drawSelectorOnTop="false"
+        android:fastScrollAlwaysVisible="true"
         android:layout_weight="40"
         app:layout_constraintBottom_toTopOf="@+id/textView28"
         app:layout_constraintEnd_toEndOf="parent"

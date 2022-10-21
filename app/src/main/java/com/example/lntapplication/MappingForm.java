@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -50,7 +51,7 @@ public class MappingForm extends AppCompatActivity {
     Context context = this;
     CardView ReadingCard;
     boolean bleStatus;
-    Spinner assetId;
+    AutoCompleteTextView assetId;
     Button Search, ViewDetals, Mapped;
     String AssetKey, location, serialNo, pO_DATE1;
     ProgressDialog dialog;
@@ -69,7 +70,7 @@ public class MappingForm extends AppCompatActivity {
         uhf.init(this);
         uhf.setPower(10);
         ReadingCard = findViewById(R.id.button_Scan);
-        assetId = findViewById(R.id.spinner2value);
+        assetId = findViewById(R.id.Accession_no_mapping);
         Search = findViewById(R.id.Stop_Search);
         ViewDetals = findViewById(R.id.ViewAll);
         Mapped = findViewById(R.id.submitbn);
@@ -162,15 +163,17 @@ public class MappingForm extends AppCompatActivity {
                             dialog.setMessage("Mapping Data...");
                             dialog.setCancelable(false);
                             dialog.show();
-                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"),assetId.getText().toString());
 //                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
                             if (a == 1) {
                                 dialog.dismiss();
+                                assetId.setText("");
                                 Clear();
                                 Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
                             } else {
                                 dialog.dismiss();
+                                assetId.setText("");
                                 Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
 
                             }
@@ -183,15 +186,17 @@ public class MappingForm extends AppCompatActivity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
 
-                                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"), AssetKey);
+                                            int a = reportDb.updateContact(new ReportDatabase(ProductId, SerialNo, DrawingNo, SapNo, SpoolNo, Weight, Contractor, Location, String.valueOf(result), Remarks, CreatedAt, now.toString(), "True"), assetId.getText().toString());
 //                        Toast.makeText(MappingForm.this, ""+a, Toast.LENGTH_SHORT).show();
 
                                             if (a == 1) {
                                                 dialog.dismiss();
+                                                assetId.setText("");
                                                 Clear();
                                                 Toast.makeText(MappingForm.this, "Tag Mapped Successfully...", Toast.LENGTH_SHORT).show();
                                             } else {
                                                 dialog.dismiss();
+                                                assetId.setText("");
                                                 Toast.makeText(MappingForm.this, "Tag not Mapped...  ", Toast.LENGTH_SHORT).show();
 
                                             }
@@ -215,7 +220,7 @@ public class MappingForm extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if (AssetKey.length() > 0) {
+                if (assetId.getText().toString().length() > 0) {
 //                    FetchData(AssetKey);
 //                    dialog.setMessage("Fetch data....");
 //                    dialog.setCancelable(false);
@@ -223,11 +228,12 @@ public class MappingForm extends AppCompatActivity {
                     dialog.setMessage("Fetching Data...");
                     dialog.setCancelable(false);
                     dialog.show();
-                    listdball= reportDb.getAllDetailsSearch(AssetKey.trim());
+                    listdball= reportDb.getAllDetailsSearch(assetId.getText().toString().trim());
                     SetDAta(listdball);
 
                 } else {
                     Toast.makeText(MappingForm.this, "Please Select Asset ID", Toast.LENGTH_SHORT).show();
+               assetId.setError("Please Enter Value...");
                 }
 
             }
@@ -239,42 +245,34 @@ public class MappingForm extends AppCompatActivity {
             listId.add(listDB.get(i).getSapNo());
 
         }
-        final ArrayAdapter<String> SpinnerCountrty = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listId);
-        SpinnerCountrty.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-        assetId.setAdapter(SpinnerCountrty);
-        assetId.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                AssetKey = parent.getItemAtPosition(position).toString();
-            }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                (this, android.R.layout.simple_list_item_1, listId);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-    }
-
-
-    private void SetupIDSpinner(List<String> listId) {
-        //Country name Spinner
-
-        final ArrayAdapter<String> SpinnerCountrty = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listId);
-        SpinnerCountrty.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
-        assetId.setAdapter(SpinnerCountrty);
-        assetId.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                AssetKey = parent.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+        assetId.setThreshold(5);
+        assetId.setAdapter(adapter);
 
     }
+
+
+//    private void SetupIDSpinner(List<String> listId) {
+////        //Country name Spinner
+////
+////        final ArrayAdapter<String> SpinnerCountrty = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, listId);
+////        SpinnerCountrty.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+////        assetId.setAdapter(SpinnerCountrty);
+////        assetId.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+////            @Override
+////            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+////                AssetKey = parent.getItemAtPosition(position).toString();
+////            }
+////
+////            @Override
+////            public void onNothingSelected(AdapterView<?> parent) {
+////
+////            }
+////        });
+////
+////    }
 
 
 

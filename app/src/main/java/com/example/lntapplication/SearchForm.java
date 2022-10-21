@@ -218,6 +218,8 @@ public class SearchForm extends AppCompatActivity {
                         try {
                             uhfTaginfo = uhf.readTagFromBuffer();
                             String tag = uhfTaginfo.getEPC().substring(4,28);
+//                            String tag = uhfTaginfo.getEPC();
+
                             if (tag != null && tag.length() > 0) {
                                 Log.e("Testing", "EPC:" + tag);
                                 if (needtoProcess(tag, list)) {

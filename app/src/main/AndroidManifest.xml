@@ -28,22 +28,20 @@
         android:icon="@drawable/lt"
         android:label="@string/app_name"
         android:roundIcon="@drawable/lt"
-
         android:supportsRtl="true"
         android:theme="@style/Theme.LNTApplication"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Location"
+            android:exported="false" />
+        <activity
             android:name=".BleConnectFrom"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
         <activity
             android:name=".BleSetUPForm"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
         <activity
             android:name=".Splash_screen"
             android:exported="true"
@@ -69,9 +67,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
     </application>
 
 </manifest>
